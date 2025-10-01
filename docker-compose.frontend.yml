@@ -28,10 +28,27 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=SlipVerificationDb;Username=postgres;Password=postgres123
-      - Redis__Configuration=redis:6379
+      - ConnectionStrings__Redis=redis:6379
       - Jwt__Secret=your-super-secret-jwt-key-change-this-in-production
       - Jwt__Issuer=SlipVerificationAPI
       - Jwt__Audience=SlipVerificationClient
+      # Notification Service Configuration
+      - LineNotify__DefaultToken=${LINE_NOTIFY_TOKEN:-}
+      - LineNotify__TimeoutSeconds=30
+      - Email__SmtpHost=${SMTP_HOST:-smtp.gmail.com}
+      - Email__SmtpPort=${SMTP_PORT:-587}
+      - Email__Username=${SMTP_USERNAME:-}
+      - Email__Password=${SMTP_PASSWORD:-}
+      - Email__FromEmail=${SMTP_FROM_EMAIL:-noreply@slipverification.com}
+      - Email__FromName=Slip Verification System
+      - Email__EnableSsl=true
+      - PushNotification__ProjectId=${FCM_PROJECT_ID:-}
+      - PushNotification__ServerKey=${FCM_SERVER_KEY:-}
+      - PushNotification__TimeoutSeconds=30
+      - Sms__AccountSid=${TWILIO_ACCOUNT_SID:-}
+      - Sms__AuthToken=${TWILIO_AUTH_TOKEN:-}
+      - Sms__FromNumber=${TWILIO_FROM_NUMBER:-}
+      - Sms__TimeoutSeconds=30
     depends_on:
       - postgres
       - redis

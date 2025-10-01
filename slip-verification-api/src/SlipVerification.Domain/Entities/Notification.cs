@@ -1,4 +1,5 @@
 using SlipVerification.Domain.Common;
+using SlipVerification.Domain.Enums;
 
 namespace SlipVerification.Domain.Entities;
 
@@ -43,6 +44,11 @@ public class Notification : BaseEntity
     public string Status { get; set; } = "Pending";
     
     /// <summary>
+    /// Gets or sets the notification priority
+    /// </summary>
+    public NotificationPriority Priority { get; set; } = NotificationPriority.Normal;
+    
+    /// <summary>
     /// Gets or sets when the notification was sent
     /// </summary>
     public DateTime? SentAt { get; set; }
@@ -61,6 +67,16 @@ public class Notification : BaseEntity
     /// Gets or sets the number of retry attempts
     /// </summary>
     public int RetryCount { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the maximum retry attempts
+    /// </summary>
+    public int MaxRetryCount { get; set; } = 3;
+    
+    /// <summary>
+    /// Gets or sets the next retry time
+    /// </summary>
+    public DateTime? NextRetryAt { get; set; }
     
     /// <summary>
     /// Navigation property for user
