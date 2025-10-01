@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: slip-verification
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"
+  Jwt__Issuer: "SlipVerificationAPI"
+  Jwt__Audience: "SlipVerificationClient"
+  Jwt__ExpiryMinutes: "60"
+  FileStorage__BasePath: "/app/uploads"
+  FileStorage__BaseUrl: "https://api.slipverification.com/uploads"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ocr-config
+  namespace: slip-verification
+data:
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  DEBUG: "False"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: slip-verification
+data:
+  POSTGRES_DB: "SlipVerificationDb"
