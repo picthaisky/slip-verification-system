@@ -11,7 +11,8 @@ A comprehensive web application for real-time payment slip verification with aut
 ```
 slip-verification-system/
 ├── slip-verification-web/       # Angular 20 Frontend
-└── slip-verification-api/       # .NET Core Backend
+├── slip-verification-api/       # .NET Core Backend
+└── ocr-service/                 # Python OCR Microservice
 ```
 
 ## 🚀 Quick Start
@@ -19,17 +20,20 @@ slip-verification-system/
 ### Prerequisites
 - **Backend**: .NET 9 SDK, PostgreSQL, Redis
 - **Frontend**: Node.js 20+, npm 9+
+- **OCR Service**: Python 3.12+, Docker (optional)
 
 ### Start Full Stack with Docker
 
 ```bash
-# Start all services
+# Start all services (Frontend, Backend, OCR, PostgreSQL, Redis)
 docker-compose -f docker-compose.frontend.yml up -d
 
 # Access applications
 # Frontend: http://localhost:4200
 # Backend API: http://localhost:5000
+# OCR Service: http://localhost:8000
 # Swagger: http://localhost:5000/swagger
+# OCR API Docs: http://localhost:8000/docs
 ```
 
 ### Development Setup
@@ -41,6 +45,15 @@ dotnet restore
 dotnet build
 cd src/SlipVerification.API
 dotnet run
+```
+
+#### OCR Service
+```bash
+cd ocr-service
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 #### Frontend
@@ -59,6 +72,8 @@ npm start
   - [Project Summary](slip-verification-api/docs/PROJECT_SUMMARY.md)
 
 - **Frontend**: See [slip-verification-web/FRONTEND_README.md](slip-verification-web/FRONTEND_README.md)
+
+- **OCR Service**: See [ocr-service/README.md](ocr-service/README.md)
 
 ## 🛠️ Technology Stack
 
@@ -80,6 +95,16 @@ npm start
 - **JWT** - Authentication
 - **Serilog** - Logging
 - **Swagger** - API documentation
+
+### OCR Service
+- **Python 3.12** - Modern Python
+- **FastAPI** - High-performance web framework
+- **PaddleOCR** - OCR engine
+- **EasyOCR** - Fallback OCR engine
+- **OpenCV** - Image processing
+- **Pillow** - Image manipulation
+- **NumPy** - Numerical computing
+- **Redis** - Queue and caching
 
 ## ✨ Features
 
@@ -311,7 +336,7 @@ For issues and questions:
 ## 🗺️ Roadmap
 
 - [ ] Mobile application (React Native)
-- [ ] OCR service integration
+- [x] OCR service integration
 - [ ] Webhook notifications
 - [ ] Multi-language support (TH/EN)
 - [ ] Advanced analytics
@@ -323,6 +348,6 @@ For issues and questions:
 
 - ✅ Backend API - Complete
 - ✅ Frontend Application - Complete
-- ⏳ OCR Service - Planned
+- ✅ OCR Service - Complete
 - ⏳ Mobile App - Planned
 - ⏳ Advanced Analytics - Planned
