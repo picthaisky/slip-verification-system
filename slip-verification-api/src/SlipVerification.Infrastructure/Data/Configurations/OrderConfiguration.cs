@@ -25,6 +25,8 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.Description)
             .HasMaxLength(500);
 
+        builder.Property(o => o.QrCodeData);
+
         builder.Property(o => o.Notes)
             .HasMaxLength(1000);
 

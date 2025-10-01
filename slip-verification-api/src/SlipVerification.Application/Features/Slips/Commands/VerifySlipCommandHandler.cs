@@ -57,6 +57,7 @@ public class VerifySlipCommandHandler : IRequestHandler<VerifySlipCommand, Resul
             {
                 Id = Guid.NewGuid(),
                 OrderId = request.OrderId,
+                UserId = order.UserId, // Use the order's user ID
                 ImagePath = imagePath,
                 Status = VerificationStatus.Pending,
                 CreatedAt = DateTime.UtcNow
@@ -72,10 +73,21 @@ public class VerifySlipCommandHandler : IRequestHandler<VerifySlipCommand, Resul
             {
                 Id = slip.Id,
                 OrderId = slip.OrderId,
+                UserId = slip.UserId,
                 ImagePath = slip.ImagePath,
+                ImageHash = slip.ImageHash,
                 Amount = slip.Amount,
                 TransactionDate = slip.TransactionDate,
+                TransactionTime = slip.TransactionTime,
+                ReferenceNumber = slip.ReferenceNumber,
+                BankName = slip.BankName,
+                BankAccountNumber = slip.BankAccountNumber,
                 Status = slip.Status.ToString(),
+                RawOcrText = slip.RawOcrText,
+                OcrConfidence = slip.OcrConfidence,
+                VerificationNotes = slip.VerificationNotes,
+                VerifiedBy = slip.VerifiedBy,
+                VerifiedAt = slip.VerifiedAt,
                 CreatedAt = slip.CreatedAt
             };
 

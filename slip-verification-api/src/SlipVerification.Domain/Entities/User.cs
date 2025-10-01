@@ -24,14 +24,9 @@ public class User : BaseEntity
     public string PasswordHash { get; set; } = string.Empty;
     
     /// <summary>
-    /// Gets or sets the first name
+    /// Gets or sets the full name
     /// </summary>
-    public string? FirstName { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the last name
-    /// </summary>
-    public string? LastName { get; set; }
+    public string? FullName { get; set; }
     
     /// <summary>
     /// Gets or sets the phone number
@@ -39,14 +34,19 @@ public class User : BaseEntity
     public string? PhoneNumber { get; set; }
     
     /// <summary>
+    /// Gets or sets the LINE Notify token for notifications
+    /// </summary>
+    public string? LineNotifyToken { get; set; }
+    
+    /// <summary>
     /// Gets or sets the user role
     /// </summary>
     public UserRole Role { get; set; }
     
     /// <summary>
-    /// Gets or sets a value indicating whether the email is confirmed
+    /// Gets or sets a value indicating whether the email is verified
     /// </summary>
-    public bool IsEmailConfirmed { get; set; }
+    public bool EmailVerified { get; set; }
     
     /// <summary>
     /// Gets or sets a value indicating whether the user is active

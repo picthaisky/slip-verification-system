@@ -13,6 +13,11 @@ public class Notification : BaseEntity
     public Guid UserId { get; set; }
     
     /// <summary>
+    /// Gets or sets the notification type
+    /// </summary>
+    public string Type { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Gets or sets the notification title
     /// </summary>
     public string Title { get; set; } = string.Empty;
@@ -23,24 +28,24 @@ public class Notification : BaseEntity
     public string Message { get; set; } = string.Empty;
     
     /// <summary>
-    /// Gets or sets the notification type (Email, SMS, Push, etc.)
+    /// Gets or sets additional notification data (JSON)
     /// </summary>
-    public string Type { get; set; } = string.Empty;
+    public string? Data { get; set; }
     
     /// <summary>
-    /// Gets or sets a value indicating whether the notification was sent successfully
+    /// Gets or sets the notification channel (LINE, EMAIL, PUSH, SMS)
     /// </summary>
-    public bool IsSent { get; set; }
+    public string Channel { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets the notification status
+    /// </summary>
+    public string Status { get; set; } = "Pending";
     
     /// <summary>
     /// Gets or sets when the notification was sent
     /// </summary>
     public DateTime? SentAt { get; set; }
-    
-    /// <summary>
-    /// Gets or sets a value indicating whether the notification was read
-    /// </summary>
-    public bool IsRead { get; set; }
     
     /// <summary>
     /// Gets or sets when the notification was read
