@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Domain.Entities.SlipVerification> SlipVerifications { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
+    public DbSet<NotificationTemplate> NotificationTemplates { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,6 +34,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Domain.Entities.SlipVerification>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Transaction>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<NotificationTemplate>().HasQueryFilter(e => !e.IsDeleted);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

@@ -38,14 +38,22 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasMaxLength(50)
             .HasDefaultValue("Pending");
 
+        builder.Property(n => n.Priority)
+            .IsRequired();
+
         builder.Property(n => n.RetryCount)
             .HasDefaultValue(0);
 
+        builder.Property(n => n.MaxRetryCount)
+            .HasDefaultValue(3);
+
         builder.HasIndex(n => n.UserId);
         builder.HasIndex(n => n.Status);
+        builder.HasIndex(n => n.Priority);
         builder.HasIndex(n => n.CreatedAt).IsDescending();
         builder.HasIndex(n => n.ReadAt).HasFilter("read_at IS NULL");
         builder.HasIndex(n => n.IsDeleted);
+        builder.HasIndex(n => n.NextRetryAt).HasFilter("next_retry_at IS NOT NULL");
 
         builder.HasOne(n => n.User)
             .WithMany()
