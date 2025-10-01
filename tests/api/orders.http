@@ -1,0 +1,146 @@
+###############################################################################
+# Slip Verification API Tests - Order Management Endpoints
+###############################################################################
+
+@baseUrl = http://localhost:5000/api/v1
+@contentType = application/json
+
+###############################################################################
+# Login First to Get Token
+###############################################################################
+# @name login
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@123456"
+}
+
+@authToken = {{login.response.body.token}}
+
+###############################################################################
+# 1. Create New Order
+###############################################################################
+# @name createOrder
+POST {{baseUrl}}/orders HTTP/1.1
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "orderNumber": "ORD-{{$timestamp}}",
+  "amount": 1000.00,
+  "description": "Test order for slip verification",
+  "notes": "Payment via QR code"
+}
+
+@orderId = {{createOrder.response.body.id}}
+
+###############################################################################
+# 2. Get Order By ID
+###############################################################################
+GET {{baseUrl}}/orders/{{orderId}} HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 3. Get All Orders for Current User
+###############################################################################
+GET {{baseUrl}}/orders HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 4. Get Orders with Pagination
+###############################################################################
+GET {{baseUrl}}/orders?page=1&pageSize=10 HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 5. Get Orders by Status
+###############################################################################
+GET {{baseUrl}}/orders?status=PendingPayment HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 6. Update Order
+###############################################################################
+PUT {{baseUrl}}/orders/{{orderId}} HTTP/1.1
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "description": "Updated order description",
+  "notes": "Updated notes"
+}
+
+###############################################################################
+# 7. Cancel Order
+###############################################################################
+PUT {{baseUrl}}/orders/{{orderId}}/cancel HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 8. Create Order with Invalid Amount - Should Return 400
+###############################################################################
+POST {{baseUrl}}/orders HTTP/1.1
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "orderNumber": "ORD-INVALID",
+  "amount": -100,
+  "description": "Invalid order"
+}
+
+###############################################################################
+# 9. Get Order Without Auth - Should Return 401
+###############################################################################
+GET {{baseUrl}}/orders/{{orderId}} HTTP/1.1
+
+###############################################################################
+# 10. Get Non-Existent Order - Should Return 404
+###############################################################################
+GET {{baseUrl}}/orders/00000000-0000-0000-0000-000000000000 HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 11. Create Order with Large Amount
+###############################################################################
+POST {{baseUrl}}/orders HTTP/1.1
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "orderNumber": "ORD-LARGE-{{$timestamp}}",
+  "amount": 999999.99,
+  "description": "Large amount order",
+  "notes": "High value transaction"
+}
+
+###############################################################################
+# 12. Search Orders by Order Number
+###############################################################################
+GET {{baseUrl}}/orders/search?orderNumber=ORD- HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 13. Get Order Statistics (Admin)
+###############################################################################
+# @name loginAdmin
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@example.com",
+  "password": "Admin@123456"
+}
+
+@adminToken = {{loginAdmin.response.body.token}}
+
+GET {{baseUrl}}/orders/statistics HTTP/1.1
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+# 14. Get All Orders (Admin Only)
+###############################################################################
+GET {{baseUrl}}/orders/all HTTP/1.1
+Authorization: Bearer {{adminToken}}
