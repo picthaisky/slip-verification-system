@@ -1,0 +1,49 @@
+<mat-sidenav-container class="min-h-screen">
+  <!-- Sidebar -->
+  <mat-sidenav mode="side" opened class="w-64 bg-gray-50">
+    <div class="p-4">
+      <h2 class="text-xl font-bold text-gray-800 mb-6">Slip Verification</h2>
+      <mat-nav-list>
+        @for (item of menuItems; track item.path) {
+          @if (canShowMenuItem(item)) {
+            <a mat-list-item [routerLink]="item.path" routerLinkActive="bg-primary-100 text-primary-700" 
+               class="rounded-lg mb-1 hover:bg-gray-100 transition-colors">
+              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+              <span matListItemTitle>{{ item.label }}</span>
+            </a>
+          }
+        }
+      </mat-nav-list>
+    </div>
+  </mat-sidenav>
+
+  <!-- Main Content -->
+  <mat-sidenav-content>
+    <!-- Toolbar -->
+    <mat-toolbar color="primary" class="shadow-md">
+      <span class="flex-1"></span>
+      
+      <!-- User Info -->
+      <div class="flex items-center gap-4">
+        <app-notification-panel></app-notification-panel>
+        
+        @if (authService.currentUser(); as user) {
+          <div class="flex items-center gap-2">
+            <mat-icon>account_circle</mat-icon>
+            <span class="text-sm">{{ user.email }}</span>
+            <span class="px-2 py-1 bg-white/20 rounded text-xs">{{ user.role }}</span>
+          </div>
+        }
+        
+        <button mat-icon-button (click)="logout()">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </mat-toolbar>
+
+    <!-- Page Content -->
+    <div class="p-6">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

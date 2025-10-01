@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Domain.Entities.SlipVerification> SlipVerifications { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

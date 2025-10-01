@@ -18,8 +18,11 @@ public class SlipVerificationConfiguration : IEntityTypeConfiguration<Domain.Ent
             .IsRequired()
             .HasMaxLength(500);
 
+        builder.Property(s => s.ImageHash)
+            .HasMaxLength(64);
+
         builder.Property(s => s.Amount)
-            .HasPrecision(18, 2);
+            .HasPrecision(12, 2);
 
         builder.Property(s => s.ReferenceNumber)
             .HasMaxLength(100);
@@ -27,22 +30,32 @@ public class SlipVerificationConfiguration : IEntityTypeConfiguration<Domain.Ent
         builder.Property(s => s.BankName)
             .HasMaxLength(100);
 
-        builder.Property(s => s.SenderAccount)
-            .HasMaxLength(200);
-
-        builder.Property(s => s.ReceiverAccount)
-            .HasMaxLength(200);
+        builder.Property(s => s.BankAccountNumber)
+            .HasMaxLength(50);
 
         builder.Property(s => s.OcrConfidence)
-            .HasPrecision(5, 4);
+            .HasPrecision(5, 2);
 
         builder.Property(s => s.VerificationNotes)
             .HasMaxLength(1000);
 
         builder.HasIndex(s => s.OrderId);
-        builder.HasIndex(s => s.Status);
+        builder.HasIndex(s => s.UserId);
+        builder.HasIndex(s => s.ReferenceNumber).HasFilter("deleted_at IS NULL");
+        builder.HasIndex(s => s.Status).HasFilter("deleted_at IS NULL");
+        builder.HasIndex(s => s.ImageHash).IsUnique().HasFilter("deleted_at IS NULL");
         builder.HasIndex(s => s.CreatedAt);
         builder.HasIndex(s => s.IsDeleted);
+
+        builder.HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(s => s.Verifier)
+            .WithMany()
+            .HasForeignKey(s => s.VerifiedBy)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(s => s.Transactions)
             .WithOne(t => t.SlipVerification)

@@ -14,19 +14,34 @@ public class SlipVerification : BaseEntity
     public Guid OrderId { get; set; }
     
     /// <summary>
+    /// Gets or sets the user ID who uploaded this slip
+    /// </summary>
+    public Guid UserId { get; set; }
+    
+    /// <summary>
     /// Gets or sets the path to the uploaded slip image
     /// </summary>
     public string ImagePath { get; set; } = string.Empty;
     
     /// <summary>
+    /// Gets or sets the SHA-256 hash of the image to prevent duplicate slips
+    /// </summary>
+    public string? ImageHash { get; set; }
+    
+    /// <summary>
     /// Gets or sets the amount on the slip
     /// </summary>
-    public decimal Amount { get; set; }
+    public decimal? Amount { get; set; }
     
     /// <summary>
     /// Gets or sets the transaction date from the slip
     /// </summary>
-    public DateTime TransactionDate { get; set; }
+    public DateTime? TransactionDate { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the transaction time from the slip
+    /// </summary>
+    public TimeSpan? TransactionTime { get; set; }
     
     /// <summary>
     /// Gets or sets the reference number from the slip
@@ -39,14 +54,9 @@ public class SlipVerification : BaseEntity
     public string? BankName { get; set; }
     
     /// <summary>
-    /// Gets or sets the sender account number or name
+    /// Gets or sets the bank account number
     /// </summary>
-    public string? SenderAccount { get; set; }
-    
-    /// <summary>
-    /// Gets or sets the receiver account number or name
-    /// </summary>
-    public string? ReceiverAccount { get; set; }
+    public string? BankAccountNumber { get; set; }
     
     /// <summary>
     /// Gets or sets the verification status
@@ -69,9 +79,24 @@ public class SlipVerification : BaseEntity
     public string? VerificationNotes { get; set; }
     
     /// <summary>
+    /// Gets or sets the user ID who verified this slip
+    /// </summary>
+    public Guid? VerifiedBy { get; set; }
+    
+    /// <summary>
     /// Gets or sets when the slip was verified
     /// </summary>
     public DateTime? VerifiedAt { get; set; }
+    
+    /// <summary>
+    /// Navigation property for user who uploaded
+    /// </summary>
+    public virtual User User { get; set; } = null!;
+    
+    /// <summary>
+    /// Navigation property for user who verified
+    /// </summary>
+    public virtual User? Verifier { get; set; }
     
     /// <summary>
     /// Navigation property for order

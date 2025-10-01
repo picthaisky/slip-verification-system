@@ -27,14 +27,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(u => u.FirstName)
-            .HasMaxLength(100);
-
-        builder.Property(u => u.LastName)
-            .HasMaxLength(100);
+        builder.Property(u => u.FullName)
+            .HasMaxLength(255);
 
         builder.Property(u => u.PhoneNumber)
             .HasMaxLength(20);
+
+        builder.Property(u => u.LineNotifyToken)
+            .HasMaxLength(255);
 
         builder.HasIndex(u => u.Username).IsUnique();
         builder.HasIndex(u => u.Email).IsUnique();

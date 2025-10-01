@@ -14,9 +14,14 @@ public class Transaction : BaseEntity
     public Guid OrderId { get; set; }
     
     /// <summary>
-    /// Gets or sets the slip verification ID
+    /// Gets or sets the slip verification ID (nullable)
     /// </summary>
-    public Guid SlipVerificationId { get; set; }
+    public Guid? SlipVerificationId { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the user ID
+    /// </summary>
+    public Guid UserId { get; set; }
     
     /// <summary>
     /// Gets or sets the transaction amount
@@ -24,9 +29,9 @@ public class Transaction : BaseEntity
     public decimal Amount { get; set; }
     
     /// <summary>
-    /// Gets or sets when the transaction was processed
+    /// Gets or sets the transaction type
     /// </summary>
-    public DateTime ProcessedAt { get; set; }
+    public string TransactionType { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the transaction status
@@ -34,24 +39,29 @@ public class Transaction : BaseEntity
     public TransactionStatus Status { get; set; }
     
     /// <summary>
-    /// Gets or sets the transaction reference number
-    /// </summary>
-    public string? TransactionReference { get; set; }
-    
-    /// <summary>
     /// Gets or sets the payment method
     /// </summary>
     public string? PaymentMethod { get; set; }
     
     /// <summary>
-    /// Gets or sets additional transaction metadata
+    /// Gets or sets the transaction description
+    /// </summary>
+    public string? Description { get; set; }
+    
+    /// <summary>
+    /// Gets or sets additional transaction metadata (JSON)
     /// </summary>
     public string? Metadata { get; set; }
     
     /// <summary>
-    /// Gets or sets transaction notes
+    /// Gets or sets when the transaction was processed
     /// </summary>
-    public string? Notes { get; set; }
+    public DateTime? ProcessedAt { get; set; }
+    
+    /// <summary>
+    /// Navigation property for user
+    /// </summary>
+    public virtual User User { get; set; } = null!;
     
     /// <summary>
     /// Navigation property for order
@@ -61,5 +71,5 @@ public class Transaction : BaseEntity
     /// <summary>
     /// Navigation property for slip verification
     /// </summary>
-    public virtual SlipVerification SlipVerification { get; set; } = null!;
+    public virtual SlipVerification? SlipVerification { get; set; }
 }

@@ -1,0 +1,63 @@
+<div class="relative">
+  <!-- Notification Bell Button -->
+  <button mat-icon-button (click)="toggle()" [matBadge]="notificationService.unreadCount()" 
+          [matBadgeHidden]="notificationService.unreadCount() === 0" matBadgeColor="warn">
+    <mat-icon>notifications</mat-icon>
+  </button>
+
+  <!-- Notification Panel -->
+  @if (isOpen) {
+    <div class="fixed inset-0 z-40" (click)="close()"></div>
+    <div class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl z-50 max-h-[600px] overflow-hidden flex flex-col">
+      <!-- Header -->
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold">Notifications</h3>
+        <div class="flex gap-2">
+          @if (notificationService.unreadCount() > 0) {
+            <button mat-button (click)="markAllAsRead()" class="text-sm">
+              Mark all read
+            </button>
+          }
+          <button mat-icon-button (click)="clear()">
+            <mat-icon>delete</mat-icon>
+          </button>
+          <button mat-icon-button (click)="close()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Notifications List -->
+      <div class="overflow-y-auto flex-1">
+        @if (notificationService.notifications().length === 0) {
+          <div class="p-8 text-center text-gray-500">
+            <mat-icon class="text-4xl mb-2">notifications_none</mat-icon>
+            <p>No notifications</p>
+          </div>
+        } @else {
+          @for (notification of notificationService.notifications(); track notification.id) {
+            <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                 [class.bg-blue-50]="!notification.read"
+                 (click)="markAsRead(notification)">
+              <div class="flex items-start gap-3">
+                <mat-icon [class]="getIconColor(notification.type)">
+                  {{ getIcon(notification.type) }}
+                </mat-icon>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-sm">{{ notification.title }}</h4>
+                  <p class="text-sm text-gray-600 mt-1">{{ notification.message }}</p>
+                  <p class="text-xs text-gray-400 mt-2">
+                    {{ notification.timestamp | date:'short' }}
+                  </p>
+                </div>
+                @if (!notification.read) {
+                  <div class="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+</div>

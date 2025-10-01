@@ -39,14 +39,19 @@ public class Order : BaseEntity
     public string? Description { get; set; }
     
     /// <summary>
+    /// Gets or sets the QR code data
+    /// </summary>
+    public string? QrCodeData { get; set; }
+    
+    /// <summary>
     /// Gets or sets additional notes
     /// </summary>
     public string? Notes { get; set; }
     
     /// <summary>
-    /// Gets or sets the expected payment date
+    /// Gets or sets the expiration date for the order
     /// </summary>
-    public DateTime? ExpectedPaymentDate { get; set; }
+    public DateTime? ExpiredAt { get; set; }
     
     /// <summary>
     /// Navigation property for user
