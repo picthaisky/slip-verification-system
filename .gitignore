@@ -414,3 +414,35 @@ docker-compose.override.yml
 
 # Mac
 .DS_Store
+
+# DevOps & Infrastructure
+/backups/
+*.backup
+*.backup.gz
+*.backup.gz.enc
+/infrastructure/ssl/*.pem
+/infrastructure/ssl/*.crt
+/infrastructure/ssl/*.key
+kubeconfig
+kubeconfig.*
+.kube/
+
+# Monitoring data
+prometheus_data/
+grafana_data/
+alertmanager_data/
+
+# Logs
+*.log
+logs/
+/var/log/
+
+# Terraform (if used in future)
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Ansible (if used in future)
+*.retry
+.ansible/
