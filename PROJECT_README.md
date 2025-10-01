@@ -10,8 +10,9 @@ A comprehensive web application for real-time payment slip verification with aut
 
 ```
 slip-verification-system/
-├── slip-verification-web/       # Angular 20 Frontend
-├── slip-verification-api/       # .NET Core Backend
+├── slip-verification-web/       # Angular 20 Web Frontend
+├── slip-verification-mobile/    # React Native Mobile App (iOS & Android)
+├── slip-verification-api/       # .NET Core Backend API
 └── ocr-service/                 # Python OCR Microservice
 ```
 
@@ -20,6 +21,7 @@ slip-verification-system/
 ### Prerequisites
 - **Backend**: .NET 9 SDK, PostgreSQL, Redis
 - **Frontend**: Node.js 20+, npm 9+
+- **Mobile**: Node.js 20+, React Native CLI, Xcode (iOS), Android Studio
 - **OCR Service**: Python 3.12+, Docker (optional)
 
 ### Start Full Stack with Docker
@@ -64,6 +66,19 @@ npm start
 # Open http://localhost:4200
 ```
 
+#### Mobile App
+```bash
+cd slip-verification-mobile
+npm install
+
+# iOS (Mac only)
+cd ios && pod install && cd ..
+npm run ios
+
+# Android
+npm run android
+```
+
 ## 📚 Documentation
 
 - **Backend**: See [slip-verification-api/docs/](slip-verification-api/docs/)
@@ -71,13 +86,18 @@ npm start
   - [API Documentation](slip-verification-api/docs/API_DOCUMENTATION.md)
   - [Project Summary](slip-verification-api/docs/PROJECT_SUMMARY.md)
 
-- **Frontend**: See [slip-verification-web/FRONTEND_README.md](slip-verification-web/FRONTEND_README.md)
+- **Web Frontend**: See [slip-verification-web/FRONTEND_README.md](slip-verification-web/FRONTEND_README.md)
+
+- **Mobile App**: See [slip-verification-mobile/README.md](slip-verification-mobile/README.md)
+  - [Implementation Summary](slip-verification-mobile/IMPLEMENTATION_SUMMARY.md)
+  - [Quick Start](slip-verification-mobile/QUICKSTART.md)
+  - [Deployment Guide](slip-verification-mobile/DEPLOYMENT.md)
 
 - **OCR Service**: See [ocr-service/README.md](ocr-service/README.md)
 
 ## 🛠️ Technology Stack
 
-### Frontend
+### Web Frontend
 - **Angular 20** - Modern standalone components architecture
 - **TypeScript 5.6+** - Type-safe development
 - **Tailwind CSS 3** - Utility-first styling
@@ -85,6 +105,16 @@ npm start
 - **RxJS 7** - Reactive programming
 - **Socket.io Client** - Real-time communication
 - **Chart.js** - Data visualization
+
+### Mobile App
+- **React Native 0.75.4** - Cross-platform mobile development
+- **TypeScript 5.6+** - Type-safe development
+- **React Navigation 6** - Navigation library
+- **React Native Paper** - Material Design components
+- **Redux Toolkit** - State management
+- **React Query** - Server state caching
+- **Socket.io Client** - Real-time updates
+- **Axios** - HTTP client
 
 ### Backend
 - **.NET 9** - Latest .NET framework
