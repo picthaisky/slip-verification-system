@@ -13,6 +13,7 @@ using SlipVerification.Application.Interfaces;
 using SlipVerification.Domain.Interfaces;
 using SlipVerification.Infrastructure.Data;
 using SlipVerification.Infrastructure.Data.Repositories;
+using SlipVerification.Infrastructure.Extensions;
 using SlipVerification.Infrastructure.Services;
 using StackExchange.Redis;
 
@@ -55,6 +56,9 @@ builder.Services.AddSingleton<IFileStorageService>(sp =>
     var baseUrl = builder.Configuration["FileStorage:BaseUrl"] ?? "http://localhost:5000/uploads";
     return new LocalFileStorageService(basePath, baseUrl);
 });
+
+// Register notification services
+builder.Services.AddNotificationServices(builder.Configuration);
 
 // Configure MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(
