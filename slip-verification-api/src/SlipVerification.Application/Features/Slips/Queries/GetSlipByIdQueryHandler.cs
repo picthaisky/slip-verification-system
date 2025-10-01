@@ -30,17 +30,20 @@ public class GetSlipByIdQueryHandler : IRequestHandler<GetSlipByIdQuery, Result<
         {
             Id = slip.Id,
             OrderId = slip.OrderId,
+            UserId = slip.UserId,
             ImagePath = slip.ImagePath,
+            ImageHash = slip.ImageHash,
             Amount = slip.Amount,
             TransactionDate = slip.TransactionDate,
+            TransactionTime = slip.TransactionTime,
             ReferenceNumber = slip.ReferenceNumber,
             BankName = slip.BankName,
-            SenderAccount = slip.SenderAccount,
-            ReceiverAccount = slip.ReceiverAccount,
+            BankAccountNumber = slip.BankAccountNumber,
             Status = slip.Status.ToString(),
             RawOcrText = slip.RawOcrText,
             OcrConfidence = slip.OcrConfidence,
             VerificationNotes = slip.VerificationNotes,
+            VerifiedBy = slip.VerifiedBy,
             VerifiedAt = slip.VerifiedAt,
             CreatedAt = slip.CreatedAt
         };
