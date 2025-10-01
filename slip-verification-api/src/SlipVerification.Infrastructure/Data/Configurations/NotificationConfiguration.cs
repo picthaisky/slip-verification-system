@@ -39,8 +39,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasDefaultValue("Pending");
 
         builder.Property(n => n.Priority)
-            .IsRequired()
-            .HasDefaultValue(1); // NotificationPriority.Normal
+            .IsRequired();
 
         builder.Property(n => n.RetryCount)
             .HasDefaultValue(0);
