@@ -282,3 +282,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Make Program class accessible to integration tests
+public partial class Program { }
