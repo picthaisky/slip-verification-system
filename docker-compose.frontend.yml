@@ -82,6 +82,27 @@ services:
       - slip-verification-network
     restart: unless-stopped
 
+  # OCR Microservice - Python FastAPI
+  ocr-service:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: slip-verification-ocr
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+    networks:
+      - slip-verification-network
+    restart: unless-stopped
+    volumes:
+      - ocr_logs:/app/logs
+
 networks:
   slip-verification-network:
     driver: bridge
@@ -90,3 +111,4 @@ volumes:
   postgres_data:
   redis_data:
   pgadmin_data:
+  ocr_logs:
