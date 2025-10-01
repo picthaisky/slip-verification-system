@@ -130,7 +130,7 @@ class ImagePreprocessor:
         """Convert numpy array to bytes"""
         if len(image.shape) == 2:
             # Grayscale
-            pil_image = Image.fromarray(image, mode='L')
+            pil_image = Image.fromarray(image)
         else:
             # Color
             pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
