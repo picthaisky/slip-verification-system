@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: slip-verification-db
+    environment:
+      POSTGRES_DB: SlipVerificationDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - slip-verification-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: slip-verification-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - slip-verification-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slip-verification-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=SlipVerificationDb;Username=postgres;Password=postgres;Include Error Detail=true
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__Secret=ThisIsAVerySecretKeyForJWTToken_MustBeAtLeast32Characters_PleaseChangeInProduction
+      - Jwt__Issuer=SlipVerificationAPI
+      - Jwt__Audience=SlipVerificationClient
+      - Jwt__ExpiryMinutes=60
+      - FileStorage__BasePath=/app/uploads
+      - FileStorage__BaseUrl=http://localhost:5000/uploads
+    ports:
+      - "5000:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - api_uploads:/app/uploads
+      - api_logs:/app/Logs
+    networks:
+      - slip-verification-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # pgAdmin - Database Management UI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: slip-verification-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@slipverification.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - slip-verification-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  api_uploads:
+    driver: local
+  api_logs:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  slip-verification-network:
+    driver: bridge
