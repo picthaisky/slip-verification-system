@@ -46,12 +46,12 @@ public static class TestDataFactory
             ImageHash = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(new byte[] { 0x01, 0x02, 0x03 })),
             Amount = amount,
             TransactionDate = DateTime.UtcNow.Date,
-            TransactionTime = DateTime.UtcNow.TimeOfDay.ToString(@"hh\:mm\:ss"),
+            TransactionTime = DateTime.UtcNow.TimeOfDay,
             ReferenceNumber = referenceNumber ?? $"REF{DateTime.UtcNow.Ticks}",
             BankName = bankName ?? "Test Bank",
             BankAccountNumber = "123-4-56789-0",
             Status = status ?? VerificationStatus.Pending,
-            OcrConfidence = 0.95,
+            OcrConfidence = 0.95m,
             RawOcrText = "Test OCR Text",
             CreatedAt = DateTime.UtcNow
         };
@@ -60,17 +60,19 @@ public static class TestDataFactory
     public static User CreateUser(
         Guid? id = null,
         string? email = null,
-        string? name = null,
-        string? role = null)
+        string? fullName = null,
+        UserRole? role = null)
     {
         return new User
         {
             Id = id ?? Guid.NewGuid(),
+            Username = $"testuser{DateTime.UtcNow.Ticks}",
             Email = email ?? $"testuser{DateTime.UtcNow.Ticks}@example.com",
             PasswordHash = "$2a$11$test.hash.value.for.testing.only",
-            Name = name ?? "Test User",
-            Role = role ?? "User",
-            IsEmailVerified = true,
+            FullName = fullName ?? "Test User",
+            Role = role ?? UserRole.User,
+            EmailVerified = true,
+            IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
     }

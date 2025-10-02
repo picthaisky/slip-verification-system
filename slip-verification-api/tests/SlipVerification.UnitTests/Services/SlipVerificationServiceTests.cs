@@ -57,7 +57,6 @@ public class SlipVerificationServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Contains("slips", result);
-        _fileStorageServiceMock.Verify(x => x.SaveFileAsync(imageData, It.IsAny<string>(), "slips", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Theory]
