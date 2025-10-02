@@ -59,7 +59,37 @@ public class User : BaseEntity
     public DateTime? LastLoginAt { get; set; }
     
     /// <summary>
+    /// Gets or sets the number of failed login attempts
+    /// </summary>
+    public int FailedLoginAttempts { get; set; }
+    
+    /// <summary>
+    /// Gets or sets a value indicating whether the account is locked out
+    /// </summary>
+    public bool IsLockedOut { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the lockout end date
+    /// </summary>
+    public DateTime? LockoutEnd { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the email verification token
+    /// </summary>
+    public string? EmailVerificationToken { get; set; }
+    
+    /// <summary>
+    /// Gets or sets a value indicating whether two-factor authentication is enabled
+    /// </summary>
+    public bool TwoFactorEnabled { get; set; }
+    
+    /// <summary>
     /// Navigation property for orders
     /// </summary>
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    
+    /// <summary>
+    /// Navigation property for refresh tokens
+    /// </summary>
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

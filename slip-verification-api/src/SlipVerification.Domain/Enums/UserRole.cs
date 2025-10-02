@@ -16,7 +16,12 @@ public enum UserRole
     User = 1,
     
     /// <summary>
+    /// Manager with elevated access
+    /// </summary>
+    Manager = 2,
+    
+    /// <summary>
     /// Administrator with full access
     /// </summary>
-    Admin = 2
+    Admin = 3
 }

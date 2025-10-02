@@ -65,9 +65,45 @@ if (!string.IsNullOrEmpty(redisConnection))
     builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 }
 
+// Add memory cache for rate limiting
+builder.Services.AddMemoryCache();
+
+// Add HttpContextAccessor for audit logging
+builder.Services.AddHttpContextAccessor();
+
+// Configure security options
+builder.Services.Configure<SlipVerification.Application.Configuration.JwtConfiguration>(
+    builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<SlipVerification.Application.Configuration.PasswordPolicyOptions>(
+    builder.Configuration.GetSection("PasswordPolicy"));
+builder.Services.Configure<SlipVerification.Application.Configuration.RateLimitOptions>(
+    builder.Configuration.GetSection("RateLimit"));
+
 // Register repositories and unit of work
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Register security repositories
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.Repositories.IUserRepository, 
+    SlipVerification.Infrastructure.Data.Repositories.Auth.UserRepository>();
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.Repositories.IRefreshTokenRepository, 
+    SlipVerification.Infrastructure.Data.Repositories.Auth.RefreshTokenRepository>();
+
+// Register security services
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.IPasswordHasher, 
+    SlipVerification.Infrastructure.Services.Security.BcryptPasswordHasher>();
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.IPasswordValidator, 
+    SlipVerification.Infrastructure.Services.Security.PasswordValidator>();
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.IAuthenticationService, 
+    SlipVerification.Infrastructure.Services.Security.AuthenticationService>();
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.IUserPermissionService, 
+    SlipVerification.Infrastructure.Services.Security.UserPermissionService>();
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.IAuditLogger, 
+    SlipVerification.Infrastructure.Services.Security.AuditLogger>();
+
+// Register authorization handler
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, 
+    SlipVerification.API.Authorization.PermissionAuthorizationHandler>();
 
 // Register application services
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -136,7 +172,38 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Role-based policies
+    options.AddPolicy("AdminOnly", policy => 
+        policy.RequireRole(SlipVerification.Application.Authorization.Roles.Admin));
+    
+    options.AddPolicy("ManagerOrAdmin", policy => 
+        policy.RequireRole(
+            SlipVerification.Application.Authorization.Roles.Manager, 
+            SlipVerification.Application.Authorization.Roles.Admin));
+    
+    // Permission-based policies
+    options.AddPolicy("CanViewSlips", policy =>
+        policy.AddRequirements(new SlipVerification.Application.Authorization.PermissionRequirement(
+            SlipVerification.Application.Authorization.Permissions.ViewSlips)));
+    
+    options.AddPolicy("CanUploadSlips", policy =>
+        policy.AddRequirements(new SlipVerification.Application.Authorization.PermissionRequirement(
+            SlipVerification.Application.Authorization.Permissions.UploadSlips)));
+    
+    options.AddPolicy("CanVerifySlips", policy =>
+        policy.AddRequirements(new SlipVerification.Application.Authorization.PermissionRequirement(
+            SlipVerification.Application.Authorization.Permissions.VerifySlips)));
+    
+    options.AddPolicy("CanDeleteSlips", policy =>
+        policy.AddRequirements(new SlipVerification.Application.Authorization.PermissionRequirement(
+            SlipVerification.Application.Authorization.Permissions.DeleteSlips)));
+    
+    options.AddPolicy("CanManageUsers", policy =>
+        policy.AddRequirements(new SlipVerification.Application.Authorization.PermissionRequirement(
+            SlipVerification.Application.Authorization.Permissions.ManageUsers)));
+});
 
 // Configure API Versioning
 builder.Services.AddApiVersioning(options =>
@@ -296,7 +363,16 @@ app.UseResponseCompression();
 // Enable CORS
 app.UseCors();
 
-// Enable Rate Limiting
+// Security headers middleware
+app.UseMiddleware<SlipVerification.API.Middleware.Security.SecurityHeadersMiddleware>();
+
+// Input sanitization middleware
+app.UseMiddleware<SlipVerification.API.Middleware.Security.InputSanitizationMiddleware>();
+
+// Rate limiting middleware (custom implementation)
+app.UseMiddleware<SlipVerification.API.Middleware.Security.RateLimitingMiddleware>();
+
+// Enable Rate Limiting (built-in)
 app.UseRateLimiter();
 
 // Enable Authentication & Authorization
