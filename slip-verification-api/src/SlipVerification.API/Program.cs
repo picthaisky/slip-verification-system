@@ -8,8 +8,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using Serilog;
 using SlipVerification.API.Middleware;
+using SlipVerification.API.Services;
 using SlipVerification.Application.Interfaces;
 using SlipVerification.Domain.Interfaces;
 using SlipVerification.Infrastructure.Data;
@@ -23,17 +25,33 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog
+var elasticsearchUri = builder.Configuration["Elasticsearch:Uri"] ?? "http://localhost:9200";
+
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithProperty("Application", "SlipVerification")
     .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.Elasticsearch(new Serilog.Sinks.Elasticsearch.ElasticsearchSinkOptions(new Uri(elasticsearchUri))
+    {
+        IndexFormat = "slip-verification-{0:yyyy.MM.dd}",
+        AutoRegisterTemplate = true,
+        NumberOfShards = 2,
+        NumberOfReplicas = 1,
+        MinimumLogEventLevel = Serilog.Events.LogEventLevel.Information
+    })
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Register Prometheus metrics service
+builder.Services.AddSingleton<IMetrics, MetricsService>();
 
 // Configure PostgreSQL Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -251,6 +269,12 @@ app.Services.InitializeMessageQueues();
 // Configure the HTTP request pipeline
 app.UseSerilogRequestLogging();
 
+// Add metrics middleware
+app.UseMiddleware<MetricsMiddleware>();
+
+// Enable HTTP metrics collection
+app.UseHttpMetrics();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -324,6 +348,9 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 });
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
+// Map Prometheus metrics endpoint
+app.MapMetrics("/metrics");
 
 Log.Information("Starting Slip Verification API...");
 

@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SlipVerification.API.Services;
 using SlipVerification.Application.DTOs.Slips;
 using SlipVerification.Application.Features.Slips.Commands;
 using SlipVerification.Application.Features.Slips.Queries;
@@ -19,11 +20,13 @@ public class SlipsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<SlipsController> _logger;
+    private readonly IMetrics _metrics;
 
-    public SlipsController(IMediator mediator, ILogger<SlipsController> logger)
+    public SlipsController(IMediator mediator, ILogger<SlipsController> logger, IMetrics metrics)
     {
         _mediator = mediator;
         _logger = logger;
+        _metrics = metrics;
     }
 
     /// <summary>
@@ -47,6 +50,9 @@ public class SlipsController : ControllerBase
             return BadRequest("No file uploaded");
         }
 
+        // Measure slip processing duration
+        using var timer = _metrics.MeasureSlipProcessing();
+
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream, cancellationToken);
 
@@ -62,8 +68,18 @@ public class SlipsController : ControllerBase
 
         if (!result.IsSuccess)
         {
+            // Track failed verification
+            _metrics.IncrementSlipVerification("Failed", "Unknown");
+            _logger.LogWarning("Slip verification failed for order {OrderId}: {Error}", orderId, result.ErrorMessage);
             return BadRequest(new { message = result.ErrorMessage });
         }
+
+        // Track successful verification with bank name
+        var bankName = result.Data?.BankName ?? "Unknown";
+        var status = result.Data?.Status ?? "Unknown";
+        _metrics.IncrementSlipVerification(status, bankName);
+        
+        _logger.LogInformation("Slip verification completed for order {OrderId}, status: {Status}", orderId, status);
 
         return Ok(result.Data);
     }
