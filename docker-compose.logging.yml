@@ -46,7 +46,9 @@ services:
 
   # Fluentd - Log collection and forwarding
   fluentd:
-    image: fluent/fluentd:v1.16-1
+    build:
+      context: ./infrastructure/logging/fluentd
+      dockerfile: Dockerfile
     container_name: slip-fluentd
     ports:
       - "24224:24224"
