@@ -1,0 +1,104 @@
+# Example configuration for load balancing multiple API instances
+# This file is NOT included by default. Use it as a reference.
+
+# Multiple API Backend Instances
+upstream api_backend_multi {
+    least_conn;
+    
+    # Primary servers
+    server api1:5000 weight=2 max_fails=3 fail_timeout=30s;
+    server api2:5000 weight=2 max_fails=3 fail_timeout=30s;
+    server api3:5000 weight=1 max_fails=3 fail_timeout=30s;
+    
+    # Backup server (only used when all primary servers are down)
+    # server api-backup:5000 backup;
+    
+    # Keep connections alive
+    keepalive 64;
+    keepalive_requests 100;
+    keepalive_timeout 60s;
+}
+
+# Round Robin Load Balancing
+upstream api_backend_roundrobin {
+    server api1:5000;
+    server api2:5000;
+    server api3:5000;
+    
+    keepalive 32;
+}
+
+# IP Hash (Sticky Sessions)
+upstream api_backend_sticky {
+    ip_hash;
+    
+    server api1:5000;
+    server api2:5000;
+    server api3:5000;
+    
+    keepalive 32;
+}
+
+# Weighted Load Balancing
+upstream api_backend_weighted {
+    server api1:5000 weight=3;  # Gets 3x more requests
+    server api2:5000 weight=2;  # Gets 2x more requests
+    server api3:5000 weight=1;  # Gets 1x requests
+}
+
+# Health Check with Active Monitoring
+# Requires nginx plus or nginx-module-healthcheck
+upstream api_backend_healthcheck {
+    least_conn;
+    
+    zone backend 64k;
+    
+    server api1:5000 max_fails=3 fail_timeout=30s;
+    server api2:5000 max_fails=3 fail_timeout=30s;
+    server api3:5000 max_fails=3 fail_timeout=30s;
+    
+    # Active health check (nginx plus)
+    # health_check interval=10 fails=3 passes=2;
+}
+
+# OCR Service Load Balancing
+upstream ocr_backend_multi {
+    least_conn;
+    
+    server ocr1:8000 max_fails=2 fail_timeout=60s;
+    server ocr2:8000 max_fails=2 fail_timeout=60s;
+    
+    keepalive 16;
+}
+
+# Example server block using multiple instances
+server {
+    listen 80;
+    server_name api-multi.yourdomain.com;
+    
+    # Use the multi-instance upstream
+    location /api/ {
+        proxy_pass http://api_backend_multi;
+        proxy_http_version 1.1;
+        
+        # Keepalive
+        proxy_set_header Connection "";
+        
+        # Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Timeouts
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Buffering
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+        proxy_busy_buffers_size 8k;
+    }
+}
