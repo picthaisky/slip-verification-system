@@ -83,8 +83,11 @@ public class LocalFileStorageService : IFileStorageService
 
         var fullPath = Path.Combine(_basePath, fileKey);
         
-        using var fileOutputStream = File.Create(fullPath);
-        await fileStream.CopyToAsync(fileOutputStream, cancellationToken);
+        using (var fileOutputStream = File.Create(fullPath))
+        {
+            await fileStream.CopyToAsync(fileOutputStream, cancellationToken);
+            await fileOutputStream.FlushAsync(cancellationToken);
+        }
 
         var fileInfo = new FileInfo(fullPath);
 
