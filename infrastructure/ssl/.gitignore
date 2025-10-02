@@ -1,0 +1,11 @@
+# SSL Certificates - Never commit real certificates!
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Keep README and scripts
+!README.md
+!*.sh
