@@ -1,0 +1,103 @@
+###############################################################################
+# Slip Verification API Tests - Authentication Endpoints
+###############################################################################
+
+@baseUrl = http://localhost:5000/api/v1
+@contentType = application/json
+
+###############################################################################
+# 1. Register New User
+###############################################################################
+POST {{baseUrl}}/auth/register HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@123456",
+  "confirmPassword": "Test@123456",
+  "name": "Test User",
+  "role": "User"
+}
+
+###############################################################################
+# 2. Login - Get JWT Token
+###############################################################################
+# @name loginUser
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@123456"
+}
+
+###############################################################################
+# 3. Extract and Set Token
+###############################################################################
+@authToken = {{loginUser.response.body.token}}
+
+###############################################################################
+# 4. Get Current User Profile
+###############################################################################
+GET {{baseUrl}}/auth/me HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 5. Refresh Token
+###############################################################################
+POST {{baseUrl}}/auth/refresh HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "token": "{{authToken}}",
+  "refreshToken": "your-refresh-token-here"
+}
+
+###############################################################################
+# 6. Logout
+###############################################################################
+POST {{baseUrl}}/auth/logout HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 7. Login with Invalid Credentials - Should Return 401
+###############################################################################
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "invalid@example.com",
+  "password": "wrongpassword"
+}
+
+###############################################################################
+# 8. Access Protected Endpoint Without Token - Should Return 401
+###############################################################################
+GET {{baseUrl}}/auth/me HTTP/1.1
+
+###############################################################################
+# 9. Login as Admin
+###############################################################################
+# @name loginAdmin
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@example.com",
+  "password": "Admin@123456"
+}
+
+@adminToken = {{loginAdmin.response.body.token}}
+
+###############################################################################
+# 10. Test Password Validation - Weak Password
+###############################################################################
+POST {{baseUrl}}/auth/register HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "weakpass@example.com",
+  "password": "123",
+  "confirmPassword": "123",
+  "name": "Weak Password User"
+}
