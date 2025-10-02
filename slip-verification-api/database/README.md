@@ -11,10 +11,18 @@ database/
 │   ├── ERD.md                    # Entity Relationship Diagram
 │   ├── INDEX_STRATEGY.md         # Indexing strategy and optimization
 │   ├── BACKUP_RESTORE.md         # Backup and disaster recovery procedures
-│   └── PERFORMANCE_TUNING.md     # Performance optimization guide
+│   ├── PERFORMANCE_TUNING.md     # Performance optimization guide
+│   └── MIGRATION_STRATEGY.md     # Complete migration strategy guide
 └── scripts/
     ├── 01_schema.sql             # Complete database schema
-    └── 02_seed_data.sql          # Sample seed data
+    ├── 02_seed_data.sql          # Sample seed data
+    └── migrations/               # Migration scripts and utilities
+        ├── production-migration.sh    # Production migration script
+        ├── test-migrations.sh         # Test migrations script
+        ├── rollback-migration.sh      # Rollback script
+        ├── generate-sql-script.sh     # SQL generation script
+        ├── examples/                  # Example migrations
+        └── README.md                  # Migration scripts documentation
 ```
 
 ## Quick Start
@@ -150,6 +158,22 @@ Comprehensive backup and disaster recovery:
 
 ### ⚡ [Performance Tuning](docs/PERFORMANCE_TUNING.md)
 Database performance optimization:
+
+### 🔄 [Migration Strategy](docs/MIGRATION_STRATEGY.md)
+Complete database migration strategy:
+- Entity Framework Core migrations workflow
+- Migration class examples (basic, data, complex)
+- Production migration procedures
+- Rollback strategies
+- Testing approach
+- Best practices and guidelines
+
+### 📝 [Migration Scripts](scripts/migrations/README.md)
+Production-ready migration scripts:
+- Production migration with backup/rollback
+- Migration testing in safe environment
+- SQL script generation
+- Example migration implementations
 - PostgreSQL configuration
 - Connection pooling setup
 - Query optimization techniques
