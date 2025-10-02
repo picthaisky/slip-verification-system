@@ -53,9 +53,49 @@ builder.Services.AddControllers();
 // Register Prometheus metrics service
 builder.Services.AddSingleton<IMetrics, MetricsService>();
 
-// Configure PostgreSQL Database
+// Configure Response Compression for performance
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json", "image/svg+xml" });
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Optimal;
+});
+
+// Configure PostgreSQL Database with performance optimizations
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsqlOptions =>
+        {
+            npgsqlOptions.CommandTimeout(30);
+            npgsqlOptions.EnableRetryOnFailure(3);
+            npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        }
+    );
+    
+    // Enable query caching by default with NoTracking
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+    
+    // Disable detailed errors in production for performance
+    if (builder.Environment.IsProduction())
+    {
+        options.EnableSensitiveDataLogging(false);
+        options.EnableDetailedErrors(false);
+    }
+});
 
 // Configure Redis
 var redisConnection = builder.Configuration.GetConnectionString("Redis");
@@ -82,6 +122,31 @@ builder.Services.Configure<SlipVerification.Application.Configuration.RateLimitO
 // Register repositories and unit of work
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Register performance-optimized repositories
+builder.Services.AddScoped<OrderRepository>();
+builder.Services.AddScoped<SlipVerification.Application.Interfaces.Repositories.ISlipVerificationRepository, 
+    SlipVerification.Infrastructure.Data.Repositories.SlipVerificationRepository>();
+
+// Register cached repository decorators (if Redis is available)
+if (!string.IsNullOrEmpty(redisConnection))
+{
+    // Register the cached version as the primary interface
+    builder.Services.AddScoped<SlipVerification.Application.Interfaces.Repositories.IOrderRepository>(sp =>
+    {
+        var innerRepository = sp.GetRequiredService<OrderRepository>();
+        var cache = sp.GetRequiredService<ICacheService>();
+        return new SlipVerification.Infrastructure.Services.CachedOrderRepository(innerRepository, cache);
+    });
+}
+else
+{
+    // Register the non-cached version if Redis is not available
+    builder.Services.AddScoped<SlipVerification.Application.Interfaces.Repositories.IOrderRepository, OrderRepository>();
+}
+
+// Register cache warmup service
+builder.Services.AddHostedService<SlipVerification.Infrastructure.Services.CacheWarmupService>();
 
 // Register security repositories
 builder.Services.AddScoped<SlipVerification.Application.Interfaces.Repositories.IUserRepository, 
@@ -296,13 +361,7 @@ if (!string.IsNullOrEmpty(redisConnection))
     });
 }
 
-// Configure Response Compression
-builder.Services.AddResponseCompression(options =>
-{
-    options.EnableForHttps = true;
-    options.Providers.Add<GzipCompressionProvider>();
-    options.Providers.Add<BrotliCompressionProvider>();
-});
+// Response Compression is already configured above with optimized settings
 
 // Configure Rate Limiting
 builder.Services.AddRateLimiter(options =>
