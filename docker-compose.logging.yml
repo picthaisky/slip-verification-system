@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Elasticsearch - Log storage
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: slip-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - logging
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana - Log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: slip-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - "5601:5601"
+    networks:
+      - logging
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Fluentd - Log collection and forwarding
+  fluentd:
+    build:
+      context: ./infrastructure/logging/fluentd
+      dockerfile: Dockerfile
+    container_name: slip-fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./infrastructure/logging/fluentd/fluent.conf:/fluentd/etc/fluent.conf
+      - fluentd_data:/fluentd/log
+    networks:
+      - logging
+      - slip-network
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elasticsearch_data:
+  fluentd_data:
+
+networks:
+  logging:
+    driver: bridge
+  slip-network:
+    external: true

@@ -3,34 +3,55 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using Serilog;
 using SlipVerification.API.Middleware;
+using SlipVerification.API.Services;
 using SlipVerification.Application.Interfaces;
 using SlipVerification.Domain.Interfaces;
 using SlipVerification.Infrastructure.Data;
 using SlipVerification.Infrastructure.Data.Repositories;
 using SlipVerification.Infrastructure.Extensions;
+using SlipVerification.Infrastructure.Hubs;
 using SlipVerification.Infrastructure.Services;
+using SlipVerification.Infrastructure.Services.Realtime;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Serilog
+var elasticsearchUri = builder.Configuration["Elasticsearch:Uri"] ?? "http://localhost:9200";
+
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithProperty("Application", "SlipVerification")
     .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.Elasticsearch(new Serilog.Sinks.Elasticsearch.ElasticsearchSinkOptions(new Uri(elasticsearchUri))
+    {
+        IndexFormat = "slip-verification-{0:yyyy.MM.dd}",
+        AutoRegisterTemplate = true,
+        NumberOfShards = 2,
+        NumberOfReplicas = 1,
+        MinimumLogEventLevel = Serilog.Events.LogEventLevel.Information
+    })
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Register Prometheus metrics service
+builder.Services.AddSingleton<IMetrics, MetricsService>();
 
 // Configure PostgreSQL Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -63,6 +84,9 @@ builder.Services.AddNotificationServices(builder.Configuration);
 // Register message queue services
 builder.Services.AddMessageQueueServices(builder.Configuration);
 
+// Register real-time notification service
+builder.Services.AddScoped<IRealtimeNotificationService, RealtimeNotificationService>();
+
 // Configure MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(
     Assembly.Load("SlipVerification.Application")));
@@ -91,6 +115,24 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+
+    // Configure SignalR authentication events
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for our hub...
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/ws"))
+            {
+                // Read the token out of the query string
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -168,6 +210,25 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure SignalR with Redis backplane
+var signalRBuilder = builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+    options.MaximumReceiveMessageSize = 32 * 1024; // 32 KB
+});
+
+// Add Redis backplane if Redis is configured
+if (!string.IsNullOrEmpty(redisConnection))
+{
+    signalRBuilder.AddStackExchangeRedis(redisConnection, options =>
+    {
+        options.Configuration.ChannelPrefix = "SignalR";
+    });
+}
+
 // Configure Response Compression
 builder.Services.AddResponseCompression(options =>
 {
@@ -207,6 +268,12 @@ app.Services.InitializeMessageQueues();
 
 // Configure the HTTP request pipeline
 app.UseSerilogRequestLogging();
+
+// Add metrics middleware
+app.UseMiddleware<MetricsMiddleware>();
+
+// Enable HTTP metrics collection
+app.UseHttpMetrics();
 
 if (app.Environment.IsDevelopment())
 {
@@ -250,6 +317,14 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.MapControllers();
 
+// Map SignalR Hub endpoint
+app.MapHub<NotificationHub>("/ws", options =>
+{
+    options.Transports = 
+        HttpTransportType.WebSockets | 
+        HttpTransportType.LongPolling;
+});
+
 // Map Health Check endpoints
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
@@ -273,6 +348,9 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 });
 
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
+// Map Prometheus metrics endpoint
+app.MapMetrics("/metrics");
 
 Log.Information("Starting Slip Verification API...");
 

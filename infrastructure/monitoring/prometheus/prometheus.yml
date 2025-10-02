@@ -24,53 +24,12 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # Backend API
-  - job_name: 'backend-api'
-    kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names:
-            - slip-verification
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        action: keep
-        regex: backend-api
-      - source_labels: [__meta_kubernetes_pod_name]
-        action: replace
-        target_label: pod
-      - source_labels: [__meta_kubernetes_namespace]
-        action: replace
-        target_label: namespace
-
-  # Frontend
-  - job_name: 'frontend'
-    kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names:
-            - slip-verification
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        action: keep
-        regex: frontend
-      - source_labels: [__meta_kubernetes_pod_name]
-        action: replace
-        target_label: pod
-
-  # OCR Service
-  - job_name: 'ocr-service'
-    kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names:
-            - slip-verification
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_label_app]
-        action: keep
-        regex: ocr-service
-      - source_labels: [__meta_kubernetes_pod_name]
-        action: replace
-        target_label: pod
+  # API Server (Backend .NET API)
+  - job_name: 'api'
+    static_configs:
+      - targets: ['api:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
 
   # PostgreSQL Exporter
   - job_name: 'postgres'
@@ -84,23 +43,18 @@ scrape_configs:
 
   # Node Exporter (for system metrics)
   - job_name: 'node'
-    kubernetes_sd_configs:
-      - role: node
-    relabel_configs:
-      - source_labels: [__address__]
-        regex: '(.*):10250'
-        replacement: '${1}:9100'
-        target_label: __address__
+    static_configs:
+      - targets: ['node-exporter:9100']
 
-  # Kubernetes API Server
-  - job_name: 'kubernetes-apiservers'
-    kubernetes_sd_configs:
-      - role: endpoints
-    scheme: https
-    tls_config:
-      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
-        action: keep
-        regex: default;kubernetes;https
+  # RabbitMQ (if available)
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+    scrape_interval: 30s
+
+  # OCR Service (Python FastAPI)
+  - job_name: 'ocr-service'
+    static_configs:
+      - targets: ['ocr-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
