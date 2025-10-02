@@ -1142,6 +1142,6 @@ Thanks to all our amazing contributors! 🎉
 
 **⭐ Don't forget to star this repo if you find it useful! ⭐**
 
-Made with ❤️ by [Your Team Name]
+Made with ❤️ by [SENIC DEV]
 
 </div>
