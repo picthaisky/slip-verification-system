@@ -60,6 +60,9 @@ builder.Services.AddSingleton<IFileStorageService>(sp =>
 // Register notification services
 builder.Services.AddNotificationServices(builder.Configuration);
 
+// Register message queue services
+builder.Services.AddMessageQueueServices(builder.Configuration);
+
 // Configure MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(
     Assembly.Load("SlipVerification.Application")));
@@ -198,6 +201,9 @@ builder.Services.AddHealthChecks()
     .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 
 var app = builder.Build();
+
+// Initialize message queues
+app.Services.InitializeMessageQueues();
 
 // Configure the HTTP request pipeline
 app.UseSerilogRequestLogging();
