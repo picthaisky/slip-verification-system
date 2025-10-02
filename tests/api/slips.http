@@ -1,0 +1,135 @@
+###############################################################################
+# Slip Verification API Tests - Slip Verification Endpoints
+###############################################################################
+
+@baseUrl = http://localhost:5000/api/v1
+@contentType = application/json
+
+###############################################################################
+# Login First to Get Token
+###############################################################################
+# @name login
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "Test@123456"
+}
+
+@authToken = {{login.response.body.token}}
+@orderId = 00000000-0000-0000-0000-000000000001
+
+###############################################################################
+# 1. Upload and Verify Slip
+###############################################################################
+POST {{baseUrl}}/slips/verify HTTP/1.1
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="orderId"
+
+{{orderId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test-slip.jpg"
+Content-Type: image/jpeg
+
+< ./test-data/sample-slip.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###############################################################################
+# 2. Get Slip By ID
+###############################################################################
+# @name getSlip
+GET {{baseUrl}}/slips/{{$guid}} HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 3. Get All Slips for Current User
+###############################################################################
+GET {{baseUrl}}/slips HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 4. Get Slips with Pagination
+###############################################################################
+GET {{baseUrl}}/slips?page=1&pageSize=10 HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 5. Get Slips by Status
+###############################################################################
+GET {{baseUrl}}/slips?status=Pending HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 6. Upload Slip Without File - Should Return 400
+###############################################################################
+POST {{baseUrl}}/slips/verify HTTP/1.1
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="orderId"
+
+{{orderId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###############################################################################
+# 7. Upload Slip Without Auth - Should Return 401
+###############################################################################
+POST {{baseUrl}}/slips/verify HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="orderId"
+
+{{orderId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test-slip.jpg"
+Content-Type: image/jpeg
+
+< ./test-data/sample-slip.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###############################################################################
+# 8. Get Non-Existent Slip - Should Return 404
+###############################################################################
+GET {{baseUrl}}/slips/00000000-0000-0000-0000-000000000000 HTTP/1.1
+Authorization: Bearer {{authToken}}
+
+###############################################################################
+# 9. Update Slip Verification Status (Admin)
+###############################################################################
+# @name loginAdmin
+POST {{baseUrl}}/auth/login HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@example.com",
+  "password": "Admin@123456"
+}
+
+@adminToken = {{loginAdmin.response.body.token}}
+
+PUT {{baseUrl}}/slips/{{$guid}}/status HTTP/1.1
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "Approved",
+  "notes": "Payment verified and approved"
+}
+
+###############################################################################
+# 10. Reject Slip Verification (Admin)
+###############################################################################
+PUT {{baseUrl}}/slips/{{$guid}}/status HTTP/1.1
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "Rejected",
+  "notes": "Invalid slip image or amount mismatch"
+}

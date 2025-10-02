@@ -1,0 +1,206 @@
+version: '3.8'
+
+services:
+  # Frontend - Angular Application
+  frontend:
+    image: ${REGISTRY:-registry.example.com}/slip-frontend:${TAG:-latest}
+    container_name: slip-frontend-prod
+    environment:
+      - API_URL=https://api.slipverification.com/api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - slip-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend - .NET API
+  backend:
+    image: ${REGISTRY:-registry.example.com}/slip-backend:${TAG:-latest}
+    container_name: slip-backend-prod
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=SlipVerificationAPI
+      - Jwt__Audience=SlipVerificationClient
+      - Jwt__ExpiryMinutes=60
+      - FileStorage__BasePath=/app/uploads
+      - FileStorage__BaseUrl=https://api.slipverification.com/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - slip-network
+    restart: always
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/Logs
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # OCR Service - Python FastAPI
+  ocr-service:
+    image: ${REGISTRY:-registry.example.com}/slip-ocr:${TAG:-latest}
+    container_name: slip-ocr-prod
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=False
+      - LOG_LEVEL=WARNING
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - slip-network
+    restart: always
+    volumes:
+      - ocr_logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: slip-postgres-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME:-SlipVerificationDb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - slip-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: slip-redis-prod
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - slip-network
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: slip-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infrastructure/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+      - ocr-service
+    networks:
+      - slip-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  ocr_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  slip-network:
+    driver: bridge
