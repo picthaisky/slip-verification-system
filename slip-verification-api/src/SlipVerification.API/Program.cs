@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +15,9 @@ using SlipVerification.Domain.Interfaces;
 using SlipVerification.Infrastructure.Data;
 using SlipVerification.Infrastructure.Data.Repositories;
 using SlipVerification.Infrastructure.Extensions;
+using SlipVerification.Infrastructure.Hubs;
 using SlipVerification.Infrastructure.Services;
+using SlipVerification.Infrastructure.Services.Realtime;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +66,9 @@ builder.Services.AddNotificationServices(builder.Configuration);
 // Register message queue services
 builder.Services.AddMessageQueueServices(builder.Configuration);
 
+// Register real-time notification service
+builder.Services.AddScoped<IRealtimeNotificationService, RealtimeNotificationService>();
+
 // Configure MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(
     Assembly.Load("SlipVerification.Application")));
@@ -91,6 +97,24 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+
+    // Configure SignalR authentication events
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for our hub...
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/ws"))
+            {
+                // Read the token out of the query string
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -167,6 +191,25 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+// Configure SignalR with Redis backplane
+var signalRBuilder = builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+    options.MaximumReceiveMessageSize = 32 * 1024; // 32 KB
+});
+
+// Add Redis backplane if Redis is configured
+if (!string.IsNullOrEmpty(redisConnection))
+{
+    signalRBuilder.AddStackExchangeRedis(redisConnection, options =>
+    {
+        options.Configuration.ChannelPrefix = "SignalR";
+    });
+}
 
 // Configure Response Compression
 builder.Services.AddResponseCompression(options =>
@@ -249,6 +292,14 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+
+// Map SignalR Hub endpoint
+app.MapHub<NotificationHub>("/ws", options =>
+{
+    options.Transports = 
+        HttpTransportType.WebSockets | 
+        HttpTransportType.LongPolling;
+});
 
 // Map Health Check endpoints
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
