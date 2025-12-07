@@ -467,7 +467,7 @@ kubectl get services
 # https://yourdomain.com
 ```
 
-For detailed Kubernetes setup, see [infrastructure/kubernetes/README.md](infrastructure/kubernetes/README.md)
+For detailed Kubernetes setup, see [infrastructure/kubernetes/](infrastructure/kubernetes/)
 
 </details>
 
@@ -1045,7 +1045,7 @@ docker-compose \
 kubectl apply \
   -f infrastructure/kubernetes/
 ```
-[Guide →](infrastructure/kubernetes/README.md)
+[Guide →](infrastructure/kubernetes/)
 
 </td>
 <td align="center" width="25%">
