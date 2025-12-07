@@ -1,1 +1,250 @@
-<p>reports works!</p>
+<div class="reports-container p-6">
+  <div class="header mb-6">
+    <h1 class="text-3xl font-bold">Reports</h1>
+    <p class="text-gray-600">Generate and export transaction reports</p>
+  </div>
+
+  <!-- Report Type Tabs -->
+  <mat-card class="mb-6">
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)">
+      <!-- Daily Report Tab -->
+      <mat-tab label="Daily Report">
+        <div class="p-4">
+          <!-- Date Picker -->
+          <div class="filters-row mb-4 flex gap-4 items-center">
+            <mat-form-field appearance="outline">
+              <mat-label>Select Date</mat-label>
+              <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" (dateChange)="onDateChange()">
+              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="loadDailyReport()">
+              <mat-icon>refresh</mat-icon>
+              Refresh
+            </button>
+
+            <button mat-raised-button color="accent" (click)="exportToCsv()">
+              <mat-icon>download</mat-icon>
+              Export CSV
+            </button>
+          </div>
+
+          <!-- Loading Spinner -->
+          @if (loading) {
+            <div class="flex justify-center py-8">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+          }
+
+          <!-- Daily Report Content -->
+          @if (!loading && dailyReport) {
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-blue-500 text-4xl mb-2">receipt_long</mat-icon>
+                  <p class="text-2xl font-bold">{{ dailyReport.totalTransactions }}</p>
+                  <p class="text-gray-500">Total Transactions</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-green-500 text-4xl mb-2">attach_money</mat-icon>
+                  <p class="text-2xl font-bold">{{ formatCurrency(dailyReport.totalRevenue) }}</p>
+                  <p class="text-gray-500">Total Revenue</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-green-600 text-4xl mb-2">check_circle</mat-icon>
+                  <p class="text-2xl font-bold">{{ dailyReport.verifiedCount }}</p>
+                  <p class="text-gray-500">Verified</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-orange-500 text-4xl mb-2">pending</mat-icon>
+                  <p class="text-2xl font-bold">{{ dailyReport.pendingCount }}</p>
+                  <p class="text-gray-500">Pending</p>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Transactions Table -->
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Transaction Details</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <table mat-table [dataSource]="transactions" class="w-full">
+                  <!-- Reference Number Column -->
+                  <ng-container matColumnDef="referenceNumber">
+                    <th mat-header-cell *matHeaderCellDef>Reference #</th>
+                    <td mat-cell *matCellDef="let row">{{ row.referenceNumber || 'N/A' }}</td>
+                  </ng-container>
+
+                  <!-- Amount Column -->
+                  <ng-container matColumnDef="amount">
+                    <th mat-header-cell *matHeaderCellDef>Amount</th>
+                    <td mat-cell *matCellDef="let row">{{ formatCurrency(row.amount) }}</td>
+                  </ng-container>
+
+                  <!-- Status Column -->
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
+                    <td mat-cell *matCellDef="let row">
+                      <mat-chip [color]="getStatusColor(row.status)" selected>
+                        {{ row.status }}
+                      </mat-chip>
+                    </td>
+                  </ng-container>
+
+                  <!-- Bank Name Column -->
+                  <ng-container matColumnDef="bankName">
+                    <th mat-header-cell *matHeaderCellDef>Bank</th>
+                    <td mat-cell *matCellDef="let row">{{ row.bankName || 'Unknown' }}</td>
+                  </ng-container>
+
+                  <!-- Transaction Date Column -->
+                  <ng-container matColumnDef="transactionDate">
+                    <th mat-header-cell *matHeaderCellDef>Date/Time</th>
+                    <td mat-cell *matCellDef="let row">{{ row.transactionDate | date:'short' }}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+
+                <mat-paginator
+                  [length]="totalTransactions"
+                  [pageSize]="pageSize"
+                  [pageSizeOptions]="[5, 10, 25, 50]"
+                  (page)="onPageChange($event)">
+                </mat-paginator>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          @if (!loading && !dailyReport) {
+            <div class="text-center py-8 text-gray-500">
+              <mat-icon class="text-6xl mb-4">assessment</mat-icon>
+              <p>No data available for the selected date</p>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Monthly Report Tab -->
+      <mat-tab label="Monthly Report">
+        <div class="p-4">
+          <!-- Month/Year Selectors -->
+          <div class="filters-row mb-4 flex gap-4 items-center">
+            <mat-form-field appearance="outline">
+              <mat-label>Month</mat-label>
+              <mat-select [(ngModel)]="selectedMonth" (selectionChange)="onMonthYearChange()">
+                @for (month of months; track month.value) {
+                  <mat-option [value]="month.value">{{ month.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Year</mat-label>
+              <mat-select [(ngModel)]="selectedYear" (selectionChange)="onMonthYearChange()">
+                @for (year of years; track year) {
+                  <mat-option [value]="year">{{ year }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" (click)="loadMonthlyReport()">
+              <mat-icon>refresh</mat-icon>
+              Refresh
+            </button>
+          </div>
+
+          <!-- Loading Spinner -->
+          @if (loading) {
+            <div class="flex justify-center py-8">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+          }
+
+          <!-- Monthly Report Content -->
+          @if (!loading && monthlyReport) {
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-blue-500 text-4xl mb-2">receipt_long</mat-icon>
+                  <p class="text-2xl font-bold">{{ monthlyReport.totalTransactions }}</p>
+                  <p class="text-gray-500">Total Transactions</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-green-500 text-4xl mb-2">attach_money</mat-icon>
+                  <p class="text-2xl font-bold">{{ formatCurrency(monthlyReport.totalRevenue) }}</p>
+                  <p class="text-gray-500">Total Revenue</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-purple-500 text-4xl mb-2">trending_up</mat-icon>
+                  <p class="text-2xl font-bold">{{ monthlyReport.successRate }}%</p>
+                  <p class="text-gray-500">Success Rate</p>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="stat-card">
+                <mat-card-content class="text-center p-4">
+                  <mat-icon class="text-indigo-500 text-4xl mb-2">calendar_month</mat-icon>
+                  <p class="text-2xl font-bold">{{ monthlyReport.monthName }}</p>
+                  <p class="text-gray-500">{{ monthlyReport.year }}</p>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Bank Breakdown -->
+            <mat-card class="mb-6">
+              <mat-card-header>
+                <mat-card-title>Bank Breakdown</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                  @for (bank of monthlyReport.bankBreakdown; track bank.bankName) {
+                    <div class="bank-item p-4 rounded-lg bg-gray-50">
+                      <p class="font-semibold text-lg">{{ bank.bankName }}</p>
+                      <p class="text-gray-600">{{ bank.transactionCount }} transactions</p>
+                      <p class="text-green-600 font-bold">{{ formatCurrency(bank.totalAmount) }}</p>
+                      <div class="progress-bar mt-2 bg-gray-200 rounded-full h-2">
+                        <div 
+                          class="bg-blue-500 h-2 rounded-full" 
+                          [style.width.%]="bank.percentage">
+                        </div>
+                      </div>
+                      <p class="text-sm text-gray-500 mt-1">{{ bank.percentage }}%</p>
+                    </div>
+                  }
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+
+          @if (!loading && !monthlyReport) {
+            <div class="text-center py-8 text-gray-500">
+              <mat-icon class="text-6xl mb-4">assessment</mat-icon>
+              <p>No data available for the selected month</p>
+            </div>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

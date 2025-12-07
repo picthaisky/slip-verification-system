@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     BATCH_SIZE: int = 10
     RETRY_ATTEMPTS: int = 3
     
+    # Rate limiting settings
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_REQUESTS: int = 100  # requests per window
+    RATE_LIMIT_WINDOW: int = 60  # window in seconds
+    
+    # API Key settings (optional)
+    API_KEY_ENABLED: bool = False
+    API_KEY: Optional[str] = None
+    
     # Logging settings
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/ocr_service.log"

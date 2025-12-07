@@ -21,6 +21,22 @@ class TestThaiSlipPatterns:
         assert bank["name"] == "Kasikorn Bank"
         assert bank["code"] == "KBANK"
     
+    def test_detect_bank_krungsri(self):
+        """Test Krungsri Bank detection"""
+        text = "ธนาคารกรุงศรีอยุธยา จำกัด"
+        bank = ThaiSlipPatterns.detect_bank(text)
+        assert bank is not None
+        assert bank["name"] == "Krungsri Bank"
+        assert bank["code"] == "BAY"
+    
+    def test_detect_bank_gsb(self):
+        """Test Government Savings Bank detection"""
+        text = "ธนาคารออมสิน"
+        bank = ThaiSlipPatterns.detect_bank(text)
+        assert bank is not None
+        assert bank["name"] == "Government Savings Bank"
+        assert bank["code"] == "GSB"
+    
     def test_extract_amount_thai(self):
         """Test amount extraction in Thai"""
         text = "จำนวนเงิน: 1,500.00 บาท"

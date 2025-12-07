@@ -13,6 +13,11 @@ class ThaiSlipPatterns:
         "scb": {"name": "Siam Commercial Bank", "code": "SCB", "thai": "ธนาคารไทยพาณิชย์"},
         "krungthai": {"name": "Krungthai Bank", "code": "KTB", "thai": "ธนาคารกรุงไทย"},
         "tmb": {"name": "TMB Thanachart Bank", "code": "TTB", "thai": "ธนาคารทหารไทยธนชาต"},
+        "krungsri": {"name": "Krungsri Bank", "code": "BAY", "thai": "ธนาคารกรุงศรีอยุธยา"},
+        "gsb": {"name": "Government Savings Bank", "code": "GSB", "thai": "ธนาคารออมสิน"},
+        "baac": {"name": "Bank for Agriculture", "code": "BAAC", "thai": "ธ.ก.ส."},
+        "uob": {"name": "UOB Thailand", "code": "UOB", "thai": "ธนาคารยูโอบี"},
+        "cimb": {"name": "CIMB Thai Bank", "code": "CIMB", "thai": "ธนาคารซีไอเอ็มบี"},
         "promptpay": {"name": "PromptPay", "code": "PROMPTPAY", "thai": "พร้อมเพย์"}
     }
     

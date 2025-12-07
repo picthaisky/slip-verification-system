@@ -69,7 +69,8 @@ logs/
 # OCR models and cache
 .paddleocr/
 .EasyOCR/
-models/
+/models/
+!app/models/
 *.pth
 *.pdparams
 

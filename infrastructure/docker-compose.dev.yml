@@ -1,0 +1,70 @@
+# Docker Compose for Development (lightweight)
+# Use this for local development without monitoring stack
+
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build:
+      context: ../slip-verification-api
+      dockerfile: Dockerfile
+    container_name: slip-api-dev
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=postgres;Database=slipverification;User Id=postgres;Password=postgres123;
+      - Redis__ConnectionString=redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - slip-dev
+
+  # PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: slip-postgres-dev
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=slipverification
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+    volumes:
+      - postgres_dev:/var/lib/postgresql/data
+    networks:
+      - slip-dev
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: slip-redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - slip-dev
+
+  # OCR Service
+  ocr:
+    build:
+      context: ../ocr-service
+      dockerfile: Dockerfile
+    container_name: slip-ocr-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - DEBUG=true
+    depends_on:
+      - redis
+    networks:
+      - slip-dev
+
+networks:
+  slip-dev:
+    driver: bridge
+
+volumes:
+  postgres_dev:
