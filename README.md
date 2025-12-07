@@ -513,7 +513,7 @@ For detailed Kubernetes setup, see [infrastructure/kubernetes/](infrastructure/k
 [![React Native](https://img.shields.io/badge/React_Native-0.75.4-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactnative.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React Navigation](https://img.shields.io/badge/React_Navigation-6-663399?style=for-the-badge&logo=react&logoColor=white)](https://reactnavigation.org/)
-[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-Latest-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
+[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2.0-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 
 #### Database & Cache
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -563,9 +563,9 @@ For detailed Kubernetes setup, see [infrastructure/kubernetes/](infrastructure/k
 ```
 ├── React Native (0.75.4) - Mobile Framework
 ├── React Navigation (6) - Navigation
-├── Redux Toolkit (Latest) - State Management
-├── React Query (Latest) - Server State
-├── React Native Paper (Latest) - UI Components
+├── Redux Toolkit (2.0) - State Management
+├── React Query (5.17) - Server State
+├── React Native Paper (5.11) - UI Components
 ├── Socket.io Client (4.5) - Real-time
 └── Axios (1.6) - HTTP Client
 ```
@@ -575,8 +575,8 @@ For detailed Kubernetes setup, see [infrastructure/kubernetes/](infrastructure/k
 ├── PaddleOCR (2.8) - OCR Engine
 ├── FastAPI (0.115) - Web Framework
 ├── OpenCV (4.10) - Image Processing
-├── Pillow (Latest) - Image Manipulation
-├── NumPy (Latest) - Numerical Computing
+├── Pillow (11.0) - Image Manipulation
+├── NumPy (1.26) - Numerical Computing
 └── pydantic (2.5) - Data Validation
 ```
 
