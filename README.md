@@ -4,7 +4,7 @@
 
 ### ระบบตรวจสอบการรับชำระเงินผ่าน QR Code แบบอัตโนมัติด้วย AI
 
-[![Made with Love](https://img.shields.io/badge/Made%20with-❤-red?style=for-the-badge)](https://github.com/yourusername)
+[![Made with Love](https://img.shields.io/badge/Made%20with-❤-red?style=for-the-badge)](https://github.com/picthaisky)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
 
@@ -16,7 +16,7 @@
 [![Angular](https://img.shields.io/badge/Angular-20-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 
@@ -329,7 +329,7 @@ graph TB
 
 ### 1️⃣ Clone
 ```bash
-git clone https://github.com/yourusername/slip-verification-system.git
+git clone https://github.com/picthaisky/slip-verification-system.git
 cd slip-verification-system
 ```
 
@@ -338,8 +338,8 @@ cd slip-verification-system
 
 ### 2️⃣ Configure
 ```bash
-cp .env.example .env
-# Edit .env file
+cp .env.production.example .env
+# Edit .env file with your settings
 ```
 
 </td>
@@ -349,7 +349,7 @@ cp .env.example .env
 ```bash
 make dev
 # or
-docker-compose up -d
+docker-compose -f docker-compose.dev.yml up -d
 ```
 
 </td>
@@ -379,17 +379,24 @@ docker-compose up -d
 <summary><b>🐳 Option 1: Docker (Recommended)</b></summary>
 
 ```bash
-# เริ่มต้นทุก services ด้วย Docker Compose
-docker-compose up -d
+# Development Environment (Frontend, Backend, OCR, PostgreSQL, Redis)
+docker-compose -f docker-compose.dev.yml up -d
 
-# รัน migrations
-docker-compose exec api dotnet ef database update
+# Or using Makefile
+make dev
 
-# ✅ Ready! เข้าใช้งานได้ที่:
+# For full stack with monitoring
+docker-compose -f docker-compose.prod.yml up -d
+
+# ✅ Ready! Access applications at:
 # 🌐 Frontend: http://localhost:4200
 # 🔧 API: http://localhost:5000
 # 📖 Swagger: http://localhost:5000/swagger
+# 🤖 OCR Service: http://localhost:8000
+# 📖 OCR Docs: http://localhost:8000/docs
 ```
+
+**Note:** Database migrations run automatically on first startup.
 
 </details>
 
@@ -405,26 +412,42 @@ docker-compose exec api dotnet ef database update
 
 **Backend:**
 ```bash
-cd src/backend/SlipVerification.API
+cd slip-verification-api/src/SlipVerification.API
 dotnet restore
-dotnet ef database update
+dotnet build
 dotnet run
+# API available at: http://localhost:5000
 ```
 
 **Frontend:**
 ```bash
-cd src/frontend/slip-verification-web
+cd slip-verification-web
 npm install
-ng serve
+npm start
+# Web app available at: http://localhost:4200
 ```
 
 **OCR Service:**
 ```bash
-cd src/services/ocr-service
+cd ocr-service
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# OCR service available at: http://localhost:8000
+```
+
+**Mobile App:**
+```bash
+cd slip-verification-mobile
+npm install
+
+# iOS (Mac only)
+cd ios && pod install && cd ..
+npm run ios
+
+# Android
+npm run android
 ```
 
 </details>
@@ -433,16 +456,18 @@ uvicorn app.main:app --reload
 <summary><b>☸️ Option 3: Kubernetes (Production)</b></summary>
 
 ```bash
-# Apply all manifests
+# Apply Kubernetes manifests
 kubectl apply -f infrastructure/kubernetes/
 
 # Check status
 kubectl get pods
 kubectl get services
 
-# Access via ingress
+# Access via ingress (configure domain in manifests)
 # https://yourdomain.com
 ```
+
+For detailed Kubernetes setup, see [infrastructure/kubernetes/](infrastructure/kubernetes/)
 
 </details>
 
@@ -475,14 +500,20 @@ kubectl get services
 
 #### Backend Stack
 [![.NET Core](https://img.shields.io/badge/.NET_Core-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![C#](https://img.shields.io/badge/C%23-11.0-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/en-us/dotnet/csharp/)
+[![C#](https://img.shields.io/badge/C%23-12.0-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/en-us/dotnet/csharp/)
 [![Entity Framework](https://img.shields.io/badge/EF_Core-9.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://learn.microsoft.com/en-us/ef/)
 
 #### Frontend Stack
 [![Angular](https://img.shields.io/badge/Angular-20-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Angular Material](https://img.shields.io/badge/Material-20-757575?style=for-the-badge&logo=angular&logoColor=white)](https://material.angular.io/)
+
+#### Mobile Stack
+[![React Native](https://img.shields.io/badge/React_Native-0.75.4-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React Navigation](https://img.shields.io/badge/React_Navigation-6-663399?style=for-the-badge&logo=react&logoColor=white)](https://reactnavigation.org/)
+[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2.0-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
 
 #### Database & Cache
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -490,8 +521,8 @@ kubectl get services
 
 #### OCR & AI
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![PaddleOCR](https://img.shields.io/badge/PaddleOCR-Latest-0052CC?style=for-the-badge&logo=paddlepaddle&logoColor=white)](https://github.com/PaddlePaddle/PaddleOCR)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![PaddleOCR](https://img.shields.io/badge/PaddleOCR-2.8-0052CC?style=for-the-badge&logo=paddlepaddle&logoColor=white)](https://github.com/PaddlePaddle/PaddleOCR)
 
 #### DevOps
 [![Docker](https://img.shields.io/badge/Docker-Latest-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -528,13 +559,24 @@ kubectl get services
 └── date-fns (3.0) - Date Utilities
 ```
 
+#### Mobile Dependencies
+```
+├── React Native (0.75.4) - Mobile Framework
+├── React Navigation (6) - Navigation
+├── Redux Toolkit (2.0) - State Management
+├── React Query (5.17) - Server State
+├── React Native Paper (5.11) - UI Components
+├── Socket.io Client (4.5) - Real-time
+└── Axios (1.6) - HTTP Client
+```
+
 #### OCR Service Dependencies
 ```
-├── PaddleOCR (2.7) - OCR Engine
-├── OpenCV (4.8) - Image Processing
-├── Pillow (10.0) - Image Manipulation
-├── NumPy (1.24) - Numerical Computing
-├── Celery (5.3) - Task Queue
+├── PaddleOCR (2.8) - OCR Engine
+├── FastAPI (0.115) - Web Framework
+├── OpenCV (4.10) - Image Processing
+├── Pillow (11.0) - Image Manipulation
+├── NumPy (1.26) - Numerical Computing
 └── pydantic (2.5) - Data Validation
 ```
 
@@ -542,74 +584,96 @@ kubectl get services
 
 ```
 slip-verification-system/
-├── src/
-│   ├── backend/                          # .NET Core Backend
+├── slip-verification-api/           # .NET Core Backend
+│   ├── src/
 │   │   ├── SlipVerification.API/         # Web API Layer
-│   │   ├── SlipVerification.Application/ # Business Logic
+│   │   ├── SlipVerification.Application/ # Business Logic (CQRS)
 │   │   ├── SlipVerification.Domain/      # Domain Models
 │   │   ├── SlipVerification.Infrastructure/ # Data Access
 │   │   └── SlipVerification.Shared/      # Shared Utilities
-│   │
-│   ├── frontend/                         # Angular Frontend
-│   │   └── slip-verification-web/
-│   │       ├── src/
-│   │       │   ├── app/
-│   │       │   │   ├── core/            # Core Services
-│   │       │   │   ├── shared/          # Shared Components
-│   │       │   │   ├── features/        # Feature Modules
-│   │       │   │   └── layouts/         # Layout Components
-│   │       │   ├── assets/
-│   │       │   └── environments/
-│   │       └── angular.json
-│   │
-│   ├── mobile/                           # React Native Mobile App
-│   │   └── slip-verification-mobile/
-│   │
-│   └── services/                         # Microservices
-│       ├── ocr-service/                  # Python OCR Service
-│       └── notification-service/         # .NET Notification Service
+│   ├── tests/                            # Backend Tests
+│   ├── database/                         # Database Scripts
+│   ├── docs/                             # Backend Documentation
+│   └── Dockerfile
 │
-├── tests/                                # Test Projects
-│   ├── backend/
-│   │   ├── SlipVerification.UnitTests/
-│   │   └── SlipVerification.IntegrationTests/
-│   └── frontend/
-│       └── e2e/
+├── slip-verification-web/           # Angular Frontend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/                # Core Services
+│   │   │   ├── shared/              # Shared Components
+│   │   │   ├── features/            # Feature Modules
+│   │   │   └── layouts/             # Layout Components
+│   │   ├── assets/
+│   │   └── environments/
+│   ├── public/
+│   └── Dockerfile
 │
-├── infrastructure/                       # Infrastructure as Code
-│   ├── docker/
-│   │   ├── Dockerfile.api
-│   │   ├── Dockerfile.frontend
-│   │   └── Dockerfile.ocr
-│   ├── kubernetes/
-│   │   ├── deployments/
-│   │   ├── services/
-│   │   └── ingress/
-│   └── terraform/
+├── slip-verification-mobile/        # React Native Mobile App
+│   ├── src/
+│   ├── ios/                         # iOS Platform
+│   ├── android/                     # Android Platform
+│   └── README.md
 │
-├── docs/                                 # Documentation
-│   ├── api/                             # API Documentation
-│   ├── architecture/                    # Architecture Diagrams
-│   ├── deployment/                      # Deployment Guides
-│   └── user-guide/                      # User Manuals
+├── ocr-service/                     # Python OCR Microservice
+│   ├── app/
+│   │   ├── api/                     # API Routes
+│   │   ├── services/                # OCR Services
+│   │   ├── models/                  # Data Models
+│   │   └── utils/                   # Utilities
+│   ├── tests/
+│   ├── requirements.txt
+│   └── Dockerfile
 │
-├── scripts/                              # Utility Scripts
-│   ├── setup.sh
-│   ├── deploy.sh
-│   └── backup.sh
+├── tests/                           # Integration & E2E Tests
+│   ├── api/                         # API Integration Tests
+│   ├── e2e/                         # End-to-End Tests
+│   ├── load-testing/                # Load Testing
+│   ├── performance/                 # Performance Tests
+│   └── security/                    # Security Tests
 │
-├── .github/                              # GitHub Configuration
-│   └── workflows/                       # CI/CD Workflows
-│       ├── backend.yml
-│       ├── frontend.yml
-│       └── deploy.yml
+├── infrastructure/                  # Infrastructure as Code
+│   ├── kubernetes/                  # Kubernetes Manifests
+│   ├── nginx/                       # Nginx Configuration
+│   ├── monitoring/                  # Prometheus/Grafana
+│   ├── logging/                     # ELK Stack
+│   ├── ssl/                         # SSL Certificates
+│   ├── docker-compose.yml           # Infrastructure Services
+│   └── docker-compose.dev.yml       # Development Setup
 │
-├── docker-compose.yml                    # Docker Compose Config
-├── docker-compose.prod.yml               # Production Config
-├── .env.example                          # Environment Variables Template
-├── README.md                             # This file
-├── CONTRIBUTING.md                       # Contributing Guidelines
-└── LICENSE                               # License File
+├── docs/                            # Documentation
+│   ├── api/                         # API Documentation
+│   ├── architecture/                # Architecture Diagrams
+│   ├── devops/                      # DevOps Guides
+│   ├── monitoring/                  # Monitoring Setup
+│   ├── notification/                # Notification System
+│   ├── performance/                 # Performance Optimization
+│   ├── security/                    # Security Guidelines
+│   ├── signalr/                     # SignalR Real-time
+│   ├── message-queue/               # Message Queue Setup
+│   └── getting-started/             # Quick Start Guides
+│
+├── scripts/                         # Utility Scripts
+│   ├── backup/                      # Backup Scripts
+│   ├── postgres/                    # Database Scripts
+│   └── ssl/                         # SSL Scripts
+│
+├── .github/                         # GitHub Configuration
+│   └── workflows/                   # CI/CD Workflows
+│
+├── docker-compose.dev.yml           # Development Compose
+├── docker-compose.frontend.yml      # Frontend Services
+├── docker-compose.prod.yml          # Production Compose
+├── docker-compose.monitoring.yml    # Monitoring Stack
+├── docker-compose.logging.yml       # Logging Stack
+├── docker-compose.tracing.yml       # Tracing Stack
+├── Makefile                         # Quick Commands
+├── .env.production.example          # Production Environment
+├── .env.notification.example        # Notification Environment
+├── README.md                        # This file
+├── PROJECT_README.md                # Project Overview
+├── CONTRIBUTING.md                  # Contributing Guidelines
+├── CHANGELOG.md                     # Version History
+└── LICENSE                          # License File
 ---
 
 ## 📁 Project Structure
@@ -619,44 +683,50 @@ slip-verification-system/
 
 ```
 slip-verification-system/
-├── 🔧 src/
-│   ├── 🎯 backend/                    # .NET Core Backend
+├── 🎯 slip-verification-api/         # .NET Core Backend
+│   ├── src/
 │   │   ├── SlipVerification.API/      # Web API Layer
 │   │   ├── SlipVerification.Application/  # Business Logic (CQRS)
 │   │   ├── SlipVerification.Domain/   # Domain Models
 │   │   ├── SlipVerification.Infrastructure/  # Data Access
 │   │   └── SlipVerification.Shared/   # Shared Utilities
-│   │
-│   ├── 🎨 frontend/                   # Angular Frontend
-│   │   └── slip-verification-web/
-│   │       ├── src/app/
-│   │       │   ├── core/             # Singleton Services
-│   │       │   ├── shared/           # Reusable Components
-│   │       │   ├── features/         # Feature Modules
-│   │       │   └── layouts/          # Layout Components
-│   │       └── angular.json
-│   │
-│   ├── 📱 mobile/                     # React Native Mobile
-│   │   └── slip-verification-mobile/
-│   │
-│   └── 🤖 services/                   # Microservices
-│       ├── ocr-service/              # Python OCR
-│       └── notification-service/     # .NET Notifications
+│   ├── tests/                         # Backend Tests
+│   └── Dockerfile
 │
-├── 🧪 tests/                          # Test Projects
-│   ├── backend/
-│   │   ├── SlipVerification.UnitTests/
-│   │   └── SlipVerification.IntegrationTests/
-│   └── frontend/e2e/
+├── 🎨 slip-verification-web/         # Angular Frontend
+│   ├── src/app/
+│   │   ├── core/                     # Singleton Services
+│   │   ├── shared/                   # Reusable Components
+│   │   ├── features/                 # Feature Modules
+│   │   └── layouts/                  # Layout Components
+│   └── Dockerfile
 │
-├── 🏗️ infrastructure/                 # Infrastructure as Code
-│   ├── docker/
+├── 📱 slip-verification-mobile/      # React Native Mobile
+│   ├── src/
+│   ├── ios/                          # iOS Platform
+│   └── android/                      # Android Platform
+│
+├── 🤖 ocr-service/                   # Python OCR Microservice
+│   ├── app/                          # Application Code
+│   ├── tests/                        # OCR Tests
+│   └── Dockerfile
+│
+├── 🧪 tests/                         # Integration & E2E Tests
+│   ├── api/
+│   ├── e2e/
+│   ├── load-testing/
+│   ├── performance/
+│   └── security/
+│
+├── 🏗️ infrastructure/                # Infrastructure as Code
 │   ├── kubernetes/
-│   └── terraform/
+│   ├── nginx/
+│   ├── monitoring/
+│   └── logging/
 │
-├── 📚 docs/                           # Documentation
-├── 🛠️ scripts/                        # Utility Scripts
-├── 🐳 docker-compose.yml
+├── 📚 docs/                          # Documentation
+├── 🛠️ scripts/                       # Utility Scripts
+├── 🐳 docker-compose.*.yml           # Multiple Docker Compose Files
 ├── 📋 Makefile
 └── 📖 README.md
 ```
@@ -827,14 +897,22 @@ GET    /api/v1/reports/export/{type}        # 📥 Export report
 ### 🧪 Unit Tests
 ```bash
 # Backend
-make test-backend
+make test-api
 # or
+cd slip-verification-api
 dotnet test
 
 # Frontend
-make test-frontend
+make test-web
 # or
-ng test
+cd slip-verification-web
+npm test
+
+# OCR Service
+make test-ocr
+# or
+cd ocr-service
+pytest -v
 ```
 
 </td>
@@ -843,7 +921,8 @@ ng test
 ### 🔗 Integration Tests
 ```bash
 # All integration tests
-make test-integration
+cd tests/api
+dotnet test
 
 # With coverage
 dotnet test /p:CollectCoverage=true
@@ -855,9 +934,12 @@ dotnet test /p:CollectCoverage=true
 ### 🌐 E2E Tests
 ```bash
 # E2E with Playwright
-make test-e2e
-# or
-ng e2e
+cd tests/e2e
+npm install
+npm test
+
+# Or using Makefile
+make test
 ```
 
 </td>
@@ -871,10 +953,10 @@ ng e2e
 <details>
 <summary><b>📝 Environment Variables</b></summary>
 
-สร้างไฟล์ `.env` จาก `.env.example`:
+Create `.env` file from the example:
 
 ```bash
-cp .env.example .env
+cp .env.production.example .env
 ```
 
 **Key Configuration:**
@@ -885,27 +967,45 @@ DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_NAME=slip_verification_db
 DATABASE_USER=postgres
-DATABASE_PASSWORD=your_password
+DATABASE_PASSWORD=your_secure_password
 
 # Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
+REDIS_PASSWORD=
 
 # JWT
-JWT_SECRET=your-super-secret-key-min-32-chars
-JWT_EXPIRATION_MINUTES=60
+JWT_SECRET=your-super-secret-key-min-32-chars-long
+JWT_ISSUER=SlipVerificationAPI
+JWT_AUDIENCE=SlipVerificationClient
+JWT_EXPIRY_MINUTES=60
 
 # OCR Service
 OCR_SERVICE_URL=http://localhost:8000
 OCR_CONFIDENCE_THRESHOLD=0.70
 
-# Notifications
-LINE_NOTIFY_CLIENT_ID=your_client_id
+# File Storage
+FILE_STORAGE_BASE_PATH=/app/uploads
+FILE_STORAGE_BASE_URL=http://localhost:5000/uploads
+
+# Notifications (optional)
+LINE_NOTIFY_CLIENT_ID=your_line_client_id
+LINE_NOTIFY_CLIENT_SECRET=your_line_client_secret
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
 ```
 
-📖 [Full Configuration Guide](docs/CONFIGURATION.md)
+For notification setup, also configure:
+```bash
+cp .env.notification.example .env.notification
+```
+
+📖 For complete configuration options, see:
+- [.env.production.example](.env.production.example)
+- [.env.notification.example](.env.notification.example)
+- [Configuration Documentation](docs/getting-started/QUICKSTART.md)
 
 </details>
 
@@ -925,11 +1025,17 @@ SMTP_PORT=587
 
 ### 🐳 Docker
 ```bash
+# Development
+docker-compose \
+  -f docker-compose.dev.yml \
+  up -d
+
+# Production
 docker-compose \
   -f docker-compose.prod.yml \
   up -d
 ```
-[Guide →](docs/deployment/docker.md)
+[View Compose Files →](.)
 
 </td>
 <td align="center" width="25%">
@@ -939,27 +1045,29 @@ docker-compose \
 kubectl apply \
   -f infrastructure/kubernetes/
 ```
-[Guide →](docs/deployment/k8s.md)
+[Guide →](infrastructure/kubernetes/)
 
 </td>
 <td align="center" width="25%">
 
-### ☁️ Azure
+### 📊 Monitoring
 ```bash
-az webapp deploy \
-  --name slip-verification
+docker-compose \
+  -f docker-compose.monitoring.yml \
+  up -d
 ```
-[Guide →](docs/deployment/azure.md)
+[Guide →](docs/monitoring/)
 
 </td>
 <td align="center" width="25%">
 
-### 🚀 AWS
+### 📝 Logging
 ```bash
-aws deploy \
-  --application-name slip-app
+docker-compose \
+  -f docker-compose.logging.yml \
+  up -d
 ```
-[Guide →](docs/deployment/aws.md)
+[Guide →](docs/devops/)
 
 </td>
 </tr>
@@ -1087,17 +1195,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Core Team
 
-- **Project Lead**: Your Name ([@yourname](https://github.com/yourname))
-- **Backend Lead**: Backend Developer Name
-- **Frontend Lead**: Frontend Developer Name
-- **DevOps Lead**: DevOps Engineer Name
+This is an open-source project. See our [contributors](https://github.com/picthaisky/slip-verification-system/graphs/contributors).
 
 ### Contributors
 
 Thanks to all our amazing contributors! 🎉
 
-<a href="https://github.com/yourusername/slip-verification-system/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=yourusername/slip-verification-system" />
+<a href="https://github.com/picthaisky/slip-verification-system/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=picthaisky/slip-verification-system" />
 </a>
 
 ---
@@ -1106,16 +1211,15 @@ Thanks to all our amazing contributors! 🎉
 
 ### Get Help
 
-- 📧 Email: support@yourdomain.com
-- 💬 Discord: [Join our community](https://discord.gg/yourinvite)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/slip-verification-system/issues)
-- 📚 Documentation: [Full Docs](https://docs.yourdomain.com)
+- 📧 Email: support@slipverification.com (or create an issue)
+- 🐛 Issues: [GitHub Issues](https://github.com/picthaisky/slip-verification-system/issues)
+- 📚 Documentation: [docs/](docs/)
+- 💬 Discussions: [GitHub Discussions](https://github.com/picthaisky/slip-verification-system/discussions)
 
 ### Social Media
 
-- Twitter: [@yourproject](https://twitter.com/yourproject)
-- LinkedIn: [Your Company](https://linkedin.com/company/yourcompany)
-- Website: [https://yourdomain.com](https://yourdomain.com)
+- GitHub: [@picthaisky](https://github.com/picthaisky/slip-verification-system)
+- Website: [Project Repository](https://github.com/picthaisky/slip-verification-system)
 
 ---
 
@@ -1130,11 +1234,11 @@ Thanks to all our amazing contributors! 🎉
 
 ## 📊 Project Stats
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/slip-verification-system?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/slip-verification-system?style=social)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/slip-verification-system)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/slip-verification-system)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/slip-verification-system)
+![GitHub stars](https://img.shields.io/github/stars/picthaisky/slip-verification-system?style=social)
+![GitHub forks](https://img.shields.io/github/forks/picthaisky/slip-verification-system?style=social)
+![GitHub issues](https://img.shields.io/github/issues/picthaisky/slip-verification-system)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/picthaisky/slip-verification-system)
+![GitHub last commit](https://img.shields.io/github/last-commit/picthaisky/slip-verification-system)
 
 ---
 

@@ -29,19 +29,19 @@ Please be respectful and constructive in all interactions. We are committed to p
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/slip-verification-system.git
+   git clone https://github.com/picthaisky/slip-verification-system.git
    cd slip-verification-system
    ```
 
 2. **Set up environment variables**
    ```bash
-   cp .env.example .env
+   cp .env.production.example .env
    # Edit .env with your configuration
    ```
 
 3. **Start infrastructure services**
    ```bash
-   docker-compose -f docker-compose.dev.yml up -d postgres redis
+   docker-compose -f docker-compose.dev.yml up -d
    ```
 
 4. **Run the API**
@@ -54,7 +54,7 @@ Please be respectful and constructive in all interactions. We are committed to p
    ```bash
    cd slip-verification-web
    npm install
-   npm run start
+   npm start
    ```
 
 ## Development Workflow
