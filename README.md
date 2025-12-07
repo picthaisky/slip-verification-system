@@ -4,7 +4,7 @@
 
 ### ระบบตรวจสอบการรับชำระเงินผ่าน QR Code แบบอัตโนมัติด้วย AI
 
-[![Made with Love](https://img.shields.io/badge/Made%20with-❤-red?style=for-the-badge)](https://github.com/yourusername)
+[![Made with Love](https://img.shields.io/badge/Made%20with-❤-red?style=for-the-badge)](https://github.com/picthaisky)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
 
