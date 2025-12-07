@@ -147,9 +147,9 @@ dotnet ef database update --project src/SlipVerification.Infrastructure
 ## 📚 Additional Resources
 
 - **API Documentation**: http://localhost:5000/swagger
-- **Frontend Guide**: [FRONTEND_README.md](slip-verification-web/FRONTEND_README.md)
-- **Backend Guide**: [BACKEND_README.md](slip-verification-api/docs/BACKEND_README.md)
-- **Project Overview**: [PROJECT_README.md](PROJECT_README.md)
+- **Frontend Guide**: [FRONTEND_README.md](../slip-verification-web/FRONTEND_README.md)
+- **Backend Guide**: [BACKEND_README.md](../slip-verification-api/docs/BACKEND_README.md)
+- **Project Overview**: [PROJECT_README.md](../PROJECT_README.md)
 
 ## 🤝 Need Help?
 

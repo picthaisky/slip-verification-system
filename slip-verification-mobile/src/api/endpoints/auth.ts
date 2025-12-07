@@ -1,6 +1,6 @@
 import apiClient from '../client';
 import { LoginRequest, LoginResponse, RegisterRequest, User } from '../../types';
-import storageService from '../../services/storage.service';
+import storageService, { STORAGE_KEYS } from '../../services/storage.service';
 
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -9,7 +9,7 @@ export const authApi = {
     // Store tokens
     await storageService.setAuthToken(response.data.token);
     await storageService.setRefreshToken(response.data.refreshToken);
-    await storageService.setObject(storageService.STORAGE_KEYS.USER_DATA, response.data.user);
+    await storageService.setObject(STORAGE_KEYS.USER_DATA, response.data.user);
     
     return response.data;
   },
@@ -22,7 +22,7 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await storageService.removeAuthToken();
     await storageService.removeRefreshToken();
-    await storageService.removeItem(storageService.STORAGE_KEYS.USER_DATA);
+    await storageService.removeItem(STORAGE_KEYS.USER_DATA);
   },
 
   getCurrentUser: async (): Promise<User> => {

@@ -16,6 +16,7 @@ using SlipVerification.Application.Interfaces;
 using SlipVerification.Domain.Interfaces;
 using SlipVerification.Infrastructure.Data;
 using SlipVerification.Infrastructure.Data.Repositories;
+using SlipVerification.Infrastructure.Data.Seeding;
 using SlipVerification.Infrastructure.Extensions;
 using SlipVerification.Infrastructure.Hubs;
 using SlipVerification.Infrastructure.Services;
@@ -23,6 +24,38 @@ using SlipVerification.Infrastructure.Services.Realtime;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Check for seed command
+if (args.Contains("seed"))
+{
+    // Configure Serilog for seeding
+    Log.Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .CreateLogger();
+    
+    builder.Host.UseSerilog();
+    
+    // Build minimal services for seeding
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    });
+    
+    var seedApp = builder.Build();
+    
+    using (var scope = seedApp.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<DatabaseSeeder>>();
+        var seeder = new DatabaseSeeder(context, logger);
+        
+        await seeder.SeedAsync();
+    }
+    
+    Console.WriteLine("Database seeding completed!");
+    Log.CloseAndFlush();
+    return;
+}
 
 // Configure Serilog
 var elasticsearchUri = builder.Configuration["Elasticsearch:Uri"] ?? "http://localhost:9200";

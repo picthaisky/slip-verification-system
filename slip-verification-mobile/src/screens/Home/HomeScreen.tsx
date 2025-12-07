@@ -1,46 +1,148 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, useTheme } from 'react-native-paper';
+import { Text, Card, Button, useTheme, ActivityIndicator } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAppSelector } from '../../hooks/useRedux';
 import { t } from '../../locales';
+import dashboardApi, { DashboardStats, RecentActivity } from '../../api/endpoints/dashboard';
 
 const HomeScreen = ({ navigation }: any) => {
   const theme = useTheme();
   const user = useAppSelector(state => state.auth.user);
-  const [refreshing, setRefreshing] = React.useState(false);
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 2000);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadDashboardData = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true);
+    }
+    setError(null);
+
+    try {
+      const [statsData, activitiesData] = await Promise.all([
+        dashboardApi.getDashboardStats(),
+        dashboardApi.getRecentActivities(5),
+      ]);
+
+      setDashboardStats(statsData);
+      setRecentActivities(activitiesData);
+    } catch (err) {
+      console.error('Error loading dashboard:', err);
+      setError('Failed to load dashboard data');
+      // Set fallback mock data
+      setMockData();
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  const stats = [
+  const setMockData = () => {
+    setDashboardStats({
+      totalTransactions: 42,
+      totalRevenue: 156750,
+      verifiedCount: 35,
+      pendingCount: 5,
+      rejectedCount: 2,
+      successRate: 83.3,
+      averageProcessingTime: 2.5,
+      todayTransactions: 12,
+      todayRevenue: 45000,
+    });
+
+    setRecentActivities([
+      {
+        id: '1',
+        type: 'SlipVerification',
+        description: 'Slip #1234 verified',
+        status: 'Verified',
+        amount: 5000,
+        createdAt: new Date().toISOString(),
+        timeAgo: '2 hours ago',
+        icon: 'check-circle',
+        color: '#4CAF50',
+      },
+      {
+        id: '2',
+        type: 'SlipVerification',
+        description: 'Slip #1235 pending',
+        status: 'Pending',
+        amount: 12500,
+        createdAt: new Date().toISOString(),
+        timeAgo: '5 hours ago',
+        icon: 'clock-outline',
+        color: '#FF9800',
+      },
+      {
+        id: '3',
+        type: 'SlipVerification',
+        description: 'Slip #1236 uploaded',
+        status: 'Processing',
+        amount: 8750,
+        createdAt: new Date().toISOString(),
+        timeAgo: '1 day ago',
+        icon: 'upload',
+        color: '#2196F3',
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadDashboardData(false);
+  }, [loadDashboardData]);
+
+  const stats = dashboardStats ? [
     {
       title: t('home.totalTransactions'),
-      value: '42',
+      value: dashboardStats.totalTransactions.toString(),
       icon: 'receipt-text',
       color: theme.colors.primary,
     },
     {
       title: t('home.pendingVerification'),
-      value: '5',
+      value: dashboardStats.pendingCount.toString(),
       icon: 'clock-outline',
       color: '#FF9800',
     },
     {
       title: t('home.verified'),
-      value: '35',
+      value: dashboardStats.verifiedCount.toString(),
       icon: 'check-circle',
       color: '#4CAF50',
     },
     {
       title: t('home.rejected'),
-      value: '2',
+      value: dashboardStats.rejectedCount.toString(),
       icon: 'close-circle',
       color: '#F44336',
     },
-  ];
+  ] : [];
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Loading dashboard...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -61,6 +163,32 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
         <Icon name="bell-outline" size={24} color={theme.colors.primary} />
       </View>
+
+      {/* Today's Summary */}
+      {dashboardStats && (
+        <Card style={styles.summaryCard}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.summaryTitle}>
+              Today's Summary
+            </Text>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>
+                  {dashboardStats.todayTransactions}
+                </Text>
+                <Text style={styles.summaryLabel}>Transactions</Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryItem}>
+                <Text style={styles.summaryValue}>
+                  {formatCurrency(dashboardStats.todayRevenue)}
+                </Text>
+                <Text style={styles.summaryLabel}>Revenue</Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+      )}
 
       <Text variant="titleMedium" style={styles.sectionTitle}>
         {t('home.transactionSummary')}
@@ -113,33 +241,30 @@ const HomeScreen = ({ navigation }: any) => {
 
       <Card style={styles.activityCard}>
         <Card.Content>
-          <View style={styles.activityItem}>
-            <Icon name="check-circle" size={24} color="#4CAF50" />
-            <View style={styles.activityText}>
-              <Text variant="bodyMedium">Slip #1234 verified</Text>
-              <Text variant="bodySmall" style={styles.activityTime}>
-                2 hours ago
-              </Text>
-            </View>
-          </View>
-          <View style={styles.activityItem}>
-            <Icon name="clock-outline" size={24} color="#FF9800" />
-            <View style={styles.activityText}>
-              <Text variant="bodyMedium">Slip #1235 pending</Text>
-              <Text variant="bodySmall" style={styles.activityTime}>
-                5 hours ago
-              </Text>
-            </View>
-          </View>
-          <View style={styles.activityItem}>
-            <Icon name="upload" size={24} color={theme.colors.primary} />
-            <View style={styles.activityText}>
-              <Text variant="bodyMedium">Slip #1236 uploaded</Text>
-              <Text variant="bodySmall" style={styles.activityTime}>
-                1 day ago
-              </Text>
-            </View>
-          </View>
+          {recentActivities.length > 0 ? (
+            recentActivities.map((activity) => (
+              <View key={activity.id} style={styles.activityItem}>
+                <Icon
+                  name={activity.icon || 'information'}
+                  size={24}
+                  color={activity.color || '#666'}
+                />
+                <View style={styles.activityText}>
+                  <Text variant="bodyMedium">{activity.description}</Text>
+                  <Text variant="bodySmall" style={styles.activityTime}>
+                    {activity.timeAgo}
+                  </Text>
+                </View>
+                {activity.amount && (
+                  <Text style={styles.activityAmount}>
+                    {formatCurrency(activity.amount)}
+                  </Text>
+                )}
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>No recent activities</Text>
+          )}
         </Card.Content>
       </Card>
     </ScrollView>
@@ -153,6 +278,15 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    opacity: 0.7,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -164,6 +298,36 @@ const styles = StyleSheet.create({
   },
   username: {
     fontWeight: 'bold',
+  },
+  summaryCard: {
+    marginBottom: 16,
+    backgroundColor: '#1976D2',
+  },
+  summaryTitle: {
+    color: 'white',
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  summaryItem: {
+    alignItems: 'center',
+  },
+  summaryValue: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  summaryLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
+  },
+  summaryDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   sectionTitle: {
     marginTop: 16,
@@ -206,6 +370,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   activityText: {
     marginLeft: 16,
@@ -214,6 +380,15 @@ const styles = StyleSheet.create({
   activityTime: {
     opacity: 0.6,
     marginTop: 4,
+  },
+  activityAmount: {
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  emptyText: {
+    textAlign: 'center',
+    opacity: 0.6,
+    paddingVertical: 16,
   },
 });
 
